@@ -1,13 +1,20 @@
 package org.kennychaos.a2dmap.Utils;
 
+import android.util.Log;
+
 import org.kennychaos.a2dmap.Listener.TCPListener;
+import org.kennychaos.a2dmap.Model.UDPSocketClient;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -32,29 +39,42 @@ public class TCPUtil {
     private ExecutorService R = Executors.newSingleThreadExecutor();
     private Runnable runnable = null;
     private String roomba_ip = "";
-    private DatagramSocket client = null;
+    private Socket client = null;
+    private InputStream client_im = null;
+    private OutputStream client_om = null;
 
     private List<TCPListener> tcpListenerList = Collections.synchronizedList(new Vector<TCPListener>());
 
-    TCPUtil(final int port)
-    {
+    public TCPUtil(final int port, final String local_ip) {
         this.port = port;
-        if (port != -1)
-        {
+        if (port != -1) {
             final byte[] command = command_search_ip.getBytes();
             runnable = new Runnable() {
                 @Override
                 public void run() {
+                    DatagramSocket socket  = null;
                     try {
-                        DatagramSocket socket  = new DatagramSocket(port);
-                        socket.send(new DatagramPacket(command,command.length));
+                        socket = new DatagramSocket(port);
+                        String _ip = local_ip.substring(0, local_ip.lastIndexOf(".")) + ".255";
+                        socket.send(new DatagramPacket(command,command.length, InetAddress.getByName(_ip),12002));
                         byte[] bytes_packet = new byte[1024];
                         DatagramPacket packet = new DatagramPacket(bytes_packet,bytes_packet.length);
                         socket.receive(packet);
-                        roomba_ip = packet.getAddress().getHostAddress();
+                        if (packet.getData().length > 0)
+                            roomba_ip = packet.getAddress().getHostAddress();
+                        Log.e(TAG,"roomba_ip " + roomba_ip);
+                    } catch (SocketException e) {
+                        e.printStackTrace();
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+//                    UDPSocketClient udpSocketClient = new UDPSocketClient();
+//                    for (int i = 0; i < 5; i++) {
+//                        String r = udpSocketClient.receive(command, _ip, 12002);
+//                        Log.e(TAG,"roomba_ip " + r);
+//                    }
                 }
             };
             S.execute(runnable);
@@ -63,17 +83,28 @@ public class TCPUtil {
 
     public synchronized void conn()
     {
+        Log.e(TAG,"conn");
         if (Objects.equals(roomba_ip, ""))
             throw new NullPointerException("roomba ip is null");
         else {
-            try {
-                client = new DatagramSocket();
-                client.connect(new InetSocketAddress(roomba_ip,port));
-                // TODO reflex to listener client'S state
-                reflex("",REFLEX_STATE);
-            } catch (SocketException e) {
-                e.printStackTrace();
-            }
+            Executors.newSingleThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        client = new Socket(roomba_ip,port);
+                        client_im = client.getInputStream();
+                        client_om = client.getOutputStream();
+                        // TODO reflex to listener client'S state
+                        reflex("",REFLEX_STATE);
+                        start_rec();
+                    } catch (SocketException | UnknownHostException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
         }
     }
 
@@ -87,12 +118,12 @@ public class TCPUtil {
             throw new NullPointerException("client has been close");
         else if (client.isConnected())
         {
-            S.shutdown();
             S.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        client.send(new DatagramPacket(data,data.length));
+                        client_om.write(data);
+                        client_om.flush();
                         // TODO reflex to listener
                         reflex(data,REFLEX_SENT);
                     } catch (IOException e) {
@@ -105,22 +136,24 @@ public class TCPUtil {
 
     public synchronized void start_rec()
     {
-        if (!Objects.equals(roomba_ip, "") && (R.isShutdown() || R.isTerminated()))
-        {
+        Log.e(TAG,"start_rec");
+        if (!Objects.equals(roomba_ip, "")) {
             R.execute(new Runnable() {
                 @Override
                 public void run() {
-                    while (client != null && client.isConnected())
-                    {
-                        byte[] bytes = new byte[1024];
-                        DatagramPacket rec_packet = new DatagramPacket(bytes,bytes.length);
-                        try {
-                            client.receive(rec_packet);
-                            // TODO reflex to listener
-                            reflex(rec_packet.getData(),REFLEX_REC);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                    byte[] buffers = new byte[4096];
+                    int l = -1;
+                    try {
+                        if (client != null && client.isConnected()) {
+                            while ((l = client_im.read(buffers)) != -1) {
+                                byte[] bytes = new byte[l];
+                                System.arraycopy(buffers, 0, bytes, 0, l);
+                                // TODO reflex to listener
+                                reflex(bytes, REFLEX_REC);
+                            }
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             });
@@ -137,6 +170,8 @@ public class TCPUtil {
                     list.add(tcpListener);
                 }
             }
+            if (tcpListenerList.size() == 0)
+                list.add(tcpListener);
         }
     }
 
@@ -159,7 +194,6 @@ public class TCPUtil {
         List<TCPListener> list = tcpListenerList;
         synchronized (tcpListenerList)
         {
-            Iterator<TCPListener> iterator = tcpListenerList.iterator();
             for (TCPListener listener : tcpListenerList) {
                 switch (reflex_type)
                 {
@@ -196,4 +230,7 @@ public class TCPUtil {
         return stringBuilder.toString();
     }
 
+    public void setRoomba_ip(String roomba_ip) {
+        this.roomba_ip = roomba_ip;
+    }
 }

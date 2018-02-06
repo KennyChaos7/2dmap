@@ -15,7 +15,7 @@ public class LogUtil {
 
     private Activity activity = null;
 
-    LogUtil(Activity activity)
+    public LogUtil(Activity activity)
     {
         this.activity = activity;
     }

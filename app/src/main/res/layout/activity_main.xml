@@ -16,4 +16,19 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
+    <Button
+        android:id="@+id/btn_tcp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="tcp_conn"/>
+
+    <Button
+        android:id="@+id/btn_first"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="First_Time"
+        app:layout_constraintStart_toEndOf="@+id/btn_tcp"
+        tools:layout_editor_absoluteY="0dp"/>
+
 </android.support.constraint.ConstraintLayout>

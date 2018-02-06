@@ -48,7 +48,7 @@ public class MapUtil {
         {
             // TODO analysis track
             byte[] track_data_decode = Base64Util.decode(mapData.trak);
-            setTrack(track_data_decode);
+//            setTrack(track_data_decode);
         }
     }
 
@@ -71,12 +71,49 @@ public class MapUtil {
             byte[] data_compress = new byte[data_length];
             System.arraycopy(array_data,7 + data_length + 4,data_compress,0,data_length);
             byte[] data_uncompress = uncompress(data_compress,data_length);// 100x100
+            int x_begin = index_in_whole_map % 100  * 100 == 0 ? index_in_whole_map % 100  * 100 : index_in_whole_map % 100  * 100 - 1;
+            int y_begin = index_in_whole_map / 100  * 100 == 0 ? index_in_whole_map / 100  * 100 : index_in_whole_map / 100  * 100 - 1;
+
+            for (BlockMap blockMap_old : blockMapList)
+            {
+                if(blockMap_old.getIndex_in_whole_map() == index_in_whole_map && blockMap_old.getHistory_id() < history_id)
+                {
+                    blockMap_old.setHistory_id(history_id);
+                    blockMap_old.setIndex_in_whole_map(index_in_whole_map);
+                    blockMap_old.setLength(data_length);
+                    blockMap_old.setMapPointList(analysis_bytes(data_uncompress,x_begin,y_begin));
+                }
+            }
+            if (blockMapList.size() == 0)
+            {
+                blockMapList.add(new BlockMap(history_id,index_in_whole_map,data_length,analysis_bytes(data_uncompress,x_begin,y_begin)));
+            }
+            // TODO reflex to listener
 
         }
     }
 
-    private List<MapPoint> analysis_bytes(byte[] bytes) {
-
+    private List<MapPoint> analysis_bytes(byte[] bytes,int x_begin , int y_begin) {
+        List<MapPoint> mapPointList = new ArrayList<>();
+        int x = 0;
+        int y = 0;
+        for (int i = 0; i < bytes.length; i++) {
+            if (i > 0 && i % 25 == 0) {
+                y++;
+                x = 0;
+            }
+            for (int j = 7; j > 0; j = j - 2) {
+                String b1 = String.valueOf((byte) ((bytes[i] >> j) & 0x1));
+                String b2 = String.valueOf((byte) ((bytes[i] >> (j - 1)) & 0x1));
+                int type = Integer.parseInt(b1 + b2);
+                if (type != 0) {
+                    MapPoint mapPoint = new MapPoint(x + x_begin ,y + y_begin , type);
+                    mapPointList.add(mapPoint);
+                }
+                x++;
+            }
+        }
+        return mapPointList;
     }
 
     private byte[] uncompress(byte[] compress, int len) {
@@ -111,6 +148,15 @@ public class MapUtil {
         int result = 0;
         result += (buffer[0] & MASK) + ((buffer[1] & MASK) << 8);
         return result;
+    }
+
+    private void reflex(Object o,int type)
+    {
+        List<MapListener> listeners = mapListenerList;
+        synchronized (mapListenerList)
+        {
+
+        }
     }
 
     class MapData

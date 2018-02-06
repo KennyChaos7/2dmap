@@ -14,7 +14,7 @@ public class MapPoint {
     private int y = 0;
     private int type = -1;
 
-    MapPoint(int x,int y ,int type)
+    public MapPoint(int x, int y, int type)
     {
         this.x = x;
         this.y = y;
