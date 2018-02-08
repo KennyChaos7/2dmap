@@ -3,46 +3,40 @@ package org.kennychaos.a2dmap.Model;
 import android.annotation.TargetApi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 
 /**
  * Created by Kenny on 18-2-5.
  */
 
 public class Track {
-    private int history_id = -1;
-    private int index_in_whole_map = -1;
     private int index_begin = -1;
     private int index_end = -1;
     private int area_cleaned = -1;
-    private List<MapPoint> mapPointList = new ArrayList<>();
+    private List<MapPoint> mapPointList = Collections.synchronizedList(new Vector<MapPoint>());
 
-    Track(){}
+    public Track(){}
 
-    Track(int history_id,int index_in_whole_map,int index_begin,int index_end,int area_cleaned,List<MapPoint> mapPointList)
+    public Track(int index_begin,int index_end,int area_cleaned,List<MapPoint> mapPointList)
     {
-        this.history_id = history_id;
-        this.index_in_whole_map = index_in_whole_map;
         this.index_begin = index_begin;
         this.index_end = index_end;
         this.area_cleaned = area_cleaned;
         this.mapPointList = mapPointList;
     }
 
-    public int getHistory_id() {
-        return history_id;
+    @Override
+    public String toString()
+    {
+        return "Track\nindex_begin = " + index_begin + " index_end = " + index_end + " area_cleaned = " + area_cleaned + " mapPointList.size = " + mapPointList.size();
     }
 
-    public void setHistory_id(int history_id) {
-        this.history_id = history_id;
-    }
-
-    public int getIndex_in_whole_map() {
-        return index_in_whole_map;
-    }
-
-    public void setIndex_in_whole_map(int index_in_whole_map) {
-        this.index_in_whole_map = index_in_whole_map;
+    public String getDetails()
+    {
+        return toString() + "\nmapPointList = " + Arrays.toString(mapPointList.toArray());
     }
 
     public int getIndex_begin() {
@@ -74,6 +68,6 @@ public class Track {
     }
 
     public void setMapPointList(List<MapPoint> mapPointList) {
-        this.mapPointList = mapPointList;
+        this.mapPointList.addAll(mapPointList);
     }
 }

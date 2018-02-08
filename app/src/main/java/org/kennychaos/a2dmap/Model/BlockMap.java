@@ -1,6 +1,7 @@
 package org.kennychaos.a2dmap.Model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
@@ -24,6 +25,17 @@ public class BlockMap {
          this.index_in_whole_map = index_in_whole_map;
          this.length = length;
          this.mapPointList = mapPointList;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "BlockMap\nhistory_id = " + history_id + " index_in_whole_map = " + index_in_whole_map + " length = " + length + " mapPointList.size = " + mapPointList.size();
+    }
+
+    public String getDetails()
+    {
+        return toString() + " mapPointList = " + Arrays.toString(mapPointList.toArray());
     }
 
     public int getHistory_id() {

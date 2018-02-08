@@ -18,5 +18,5 @@ public interface MapListener {
 
     void receiveTrack(Track track);
 
-    void receiveTrackInfo(int history_id, int index_in_whole_map, int index_begin, int index_end, int area_cleaned);
+    void receiveTrackInfo(int index_begin, int index_end, int area_cleaned);
 }
