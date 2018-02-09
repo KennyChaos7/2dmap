@@ -31,7 +31,7 @@ public class Track {
     @Override
     public String toString()
     {
-        return "Track\nindex_begin = " + index_begin + " index_end = " + index_end + " area_cleaned = " + area_cleaned + " mapPointList.size = " + mapPointList.size();
+        return "index_begin = " + index_begin + " index_end = " + index_end + " area_cleaned = " + area_cleaned + " mapPointList.size = " + mapPointList.size();
     }
 
     public String getDetails()

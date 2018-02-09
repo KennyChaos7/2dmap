@@ -160,11 +160,12 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
 
         for (BlockMap blockMap : blockMapList)
         {
-            for (MapPoint m : blockMap.getMapPointList())
-            {
-                // TODO draw point
-
-            }
+            if (blockMap.getHistory_id() != -1)
+                for (MapPoint m : blockMap.getMapPointList())
+                {
+                    // TODO draw point
+                    draw(m.getX(),m.getY(),0,0,TYPE_BLOCK);
+                }
         }
         
         if (track.getIndex_begin() > 0) {

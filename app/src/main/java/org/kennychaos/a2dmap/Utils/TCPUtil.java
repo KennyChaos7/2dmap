@@ -140,13 +140,20 @@ public class TCPUtil {
             R.execute(new Runnable() {
                 @Override
                 public void run() {
-                    byte[] buffers = new byte[4096];
-                    int l = -1;
+                    byte[] buffers_whole_data_length = new byte[4];
+                    int l = 0, _l= -1;
                     try {
                         if (client != null && client.isConnected()) {
-                            while ((l = client_im.read(buffers)) != -1) {
-                                byte[] bytes = new byte[l];
-                                System.arraycopy(buffers, 0, bytes, 0, l);
+                            while (client_im.read(buffers_whole_data_length) != -1) {
+                                int d_l = (buffers_whole_data_length[3] & 0xFF) + ((buffers_whole_data_length[2] & 0xFF) << 8) + ((buffers_whole_data_length[1] & 0xFF) << 16) + ((buffers_whole_data_length[0] & 0xFF) << 24);
+                                byte[] d = new byte[4096];
+                                byte[] bytes = new byte[d_l];
+                                while ((_l = client_im.read(d)) != -1) {
+                                    System.arraycopy(d,0,bytes,l,_l);
+                                    l += _l;
+                                    if (l == d_l)
+                                        break;
+                                }
                                 // TODO reflex to listener
                                 reflex(bytes, REFLEX_REC);
                             }

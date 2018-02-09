@@ -14,7 +14,7 @@ public interface MapListener {
 
     void receiveBlockMap(BlockMap blockMap);
 
-    void receiveBlockMap(List<BlockMap> blockMapList);
+    void receiveBlockMapList(List<BlockMap> blockMapList);
 
     void receiveBlockMapInfo(int history_id,int index_in_whole_map,int length);
 

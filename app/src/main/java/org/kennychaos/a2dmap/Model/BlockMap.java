@@ -17,7 +17,9 @@ public class BlockMap {
     private int length = -1;
     private List<MapPoint> mapPointList = new ArrayList<>();
 
-    public BlockMap(){}
+    public BlockMap(int index_in_whole_map){
+        this.index_in_whole_map = index_in_whole_map;
+    }
 
     public BlockMap(int history_id,int index_in_whole_map,int length,List<MapPoint> mapPointList)
     {

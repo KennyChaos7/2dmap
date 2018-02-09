@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
                     while (isRefresh) {
                         mapView.refresh();
                         try {
-                            Thread.sleep(3 * 1000);
+                            Thread.sleep(10 * 1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             jo.put("map",_);
             jo.put("trak",_);
             tcpUtil.send(jo.toString().getBytes());
-            Log.e("--",jo.toString() + " \n " + bytesToHexString(jo.toString().getBytes()));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -179,26 +178,28 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
 
     @Override
     public void receiveBlockMap(BlockMap blockMap) {
-
+        logUtil.show("blockMap : " + blockMap.getDetails(),LogUtil.LOG_LEVEL_INFO);
     }
 
     @Override
-    public void receiveBlockMap(List<BlockMap> blockMapList) {
-
+    public void receiveBlockMapList(List<BlockMap> blockMapList) {
+        logUtil.show("blockMapList : " + blockMapList.size(),LogUtil.LOG_LEVEL_INFO);
+        mapView.setBlockMapList(mapUtil.getBlockMapList());
     }
 
     @Override
     public void receiveBlockMapInfo(int history_id, int index_in_whole_map, int length) {
-        logUtil.show("history_id = " + history_id + " index_in_whole_map = " + index_in_whole_map + " length = " + length , LogUtil.LOG_LEVEL_ERROR);
+        logUtil.show("history_id = " + history_id + " index_in_whole_map = " + index_in_whole_map + " length = " + length , LogUtil.LOG_LEVEL_INFO);
     }
 
     @Override
     public void receiveTrack(Track track) {
-
+        logUtil.show("track : " + track.getDetails(),LogUtil.LOG_LEVEL_INFO);
+        mapView.setTrack(mapUtil.getTrack());
     }
 
     @Override
     public void receiveTrackInfo(int index_begin, int index_end, int area_cleaned) {
-        logUtil.show("index_begin = " + index_begin + " index_end = " + index_end + " area_cleaned = " + area_cleaned , LogUtil.LOG_LEVEL_ERROR);
+        logUtil.show("index_begin = " + index_begin + " index_end = " + index_end + " area_cleaned = " + area_cleaned , LogUtil.LOG_LEVEL_INFO);
     }
 }
