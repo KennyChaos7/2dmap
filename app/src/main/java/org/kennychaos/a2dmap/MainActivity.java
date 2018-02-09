@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             mapUtil = new MapUtil();
             mapUtil.registerListener(this);
             mapView = new MapView(this);
-            mapView.init(1f,"",1000,1000);
+            mapView.init(1f,"#D8B0B0B0",1000,1000);
             linear_mapview.addView(mapView);
             singleThreadPool.execute(new Runnable() {
                 @Override
