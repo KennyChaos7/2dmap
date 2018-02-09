@@ -1,5 +1,6 @@
 package org.kennychaos.a2dmap.Utils;
 
+import android.nfc.Tag;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -10,6 +11,7 @@ import org.kennychaos.a2dmap.Model.MapPoint;
 import org.kennychaos.a2dmap.Model.Track;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
@@ -52,6 +54,19 @@ public class MapUtil {
         }
     }
 
+    public void unregisterListener(MapListener mapListener)
+    {
+        List<MapListener> listeners = mapListenerList;
+        synchronized (mapListenerList)
+        {
+            for (MapListener l : listeners)
+            {
+                if (l == mapListener)
+                    listeners.remove(l);
+            }
+        }
+    }
+
 
     public void analysis(String data)
     {
@@ -82,14 +97,14 @@ public class MapUtil {
         byte[] array_data = new byte[map_data_decode.length - 4];
         System.arraycopy(map_data_decode,4,array_data,0,array_data.length);
 
-        for (int index = 0; index < count ;index ++ )
+        for (int index = 0; index < count - 1 ;index ++ )
         {
-            index_in_whole_map = to_int(array_data,2,0 + data_length);
-            history_id = to_int(array_data,2,2 + data_length);
-            data_length = to_int(array_data,2,4 + data_length);
+            index_in_whole_map = to_int(array_data,2,0);
+            history_id = to_int(array_data,2,2);
+            data_length = to_int(array_data,2,4);
             if (data_length > 0) {
                 byte[] data_compress = new byte[data_length];
-                System.arraycopy(array_data, 7 + data_length, data_compress, 0, data_length);
+                System.arraycopy(array_data, 7 , data_compress, 0, data_length);
                 byte[] data_uncompress = uncompress(data_compress, data_length);// 100x100
                 int x_begin = (index_in_whole_map - 1) % 100 * 100 == 0 ? (index_in_whole_map - 1) % 100 * 100 : (index_in_whole_map - 1) % 100 * 100 - 1;
                 int y_begin = (index_in_whole_map - 1) / 100 * 100 == 0 ? (index_in_whole_map - 1) / 100 * 100 : (index_in_whole_map - 1) / 100 * 100 - 1;
@@ -103,18 +118,15 @@ public class MapUtil {
                         blockMap_old.setMapPointList(analysis_bytes(data_uncompress, x_begin, y_begin));
                     }
                 }
-
-                if (blockMapList.size() == 0) {
-                    blockMapList.add(blockMap_new);
-                }
-
                 // TODO reflex to listener
                 reflex(blockMap_new, REFLEX_BLOCKMAP_DATA);
                 reflex(blockMap_new, REFLEX_BLOCKMAP_INFO);
 
             }
-            data_length += 6;
+            array_data = bytes_delete(array_data,2 + 2 + 2 + data_length);
         }
+        reflex(blockMapList,REFLEX_BLOCKMAP_DATA);
+        Log.v("blockmap list ", Arrays.toString(blockMapList.toArray()));
     }
 
     private void setTrack(byte[] track_data_decode)
@@ -216,6 +228,20 @@ public class MapUtil {
         int result = 0;
         result += (buffer[1] & MASK) + ((buffer[0] & MASK) << 8);
         return result;
+    }
+
+    private byte[] bytes_delete(byte[] target , int index)
+    {
+        int l = target.length - index;
+        byte[] r = new byte[l];
+        if (index == l)
+            return new byte[]{};
+        else if (index < l)
+        {
+            System.arraycopy(target,index,r,0,l);
+            return r;
+        }
+        return new byte[]{};
     }
 
     private void reflex(Object o,int type)

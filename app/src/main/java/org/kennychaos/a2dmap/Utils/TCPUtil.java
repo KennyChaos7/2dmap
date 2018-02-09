@@ -3,7 +3,6 @@ package org.kennychaos.a2dmap.Utils;
 import android.util.Log;
 
 import org.kennychaos.a2dmap.Listener.TCPListener;
-import org.kennychaos.a2dmap.Model.UDPSocketClient;
 
 import java.io.IOException;
 import java.io.InputStream;
