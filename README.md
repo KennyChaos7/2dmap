@@ -41,3 +41,8 @@ https://note.youdao.com/share/?id=a9e434be060378db03ddeb4055049f8e&type=note#/
 
             return data;
         }
+        
+### 3 挖的坑
+
+#### 1,地图导航线将会有时间上渐变
+#### 2,像素和锯齿问题
