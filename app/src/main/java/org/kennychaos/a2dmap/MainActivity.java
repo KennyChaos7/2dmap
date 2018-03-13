@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
                     while (isRefresh) {
                         mapView.refresh();
                         try {
-                            Thread.sleep(10 * 1000);
+                            Thread.sleep(5 * 1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         JSONObject jo = new JSONObject();
         try {
             jo.put("map",_);
-            jo.put("trak",_);
+            jo.put("track",_);
             tcpUtil.send(jo.toString().getBytes());
         } catch (JSONException e) {
             e.printStackTrace();

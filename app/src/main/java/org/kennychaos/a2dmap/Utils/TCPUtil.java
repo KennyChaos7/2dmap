@@ -149,10 +149,12 @@ public class TCPUtil {
                                 byte[] d = new byte[4096];
                                 byte[] bytes = new byte[d_l];
                                 while ((_l = client_im.read(d)) != -1) {
-                                    System.arraycopy(d,0,bytes,l,_l);
+                                    System.arraycopy(d, 0, bytes, l, _l);
                                     l += _l;
                                     if (l == d_l)
                                         break;
+                                    if (d_l - l < 4096)
+                                        d = new byte[d_l - l];
                                 }
                                 // TODO reflex to listener
                                 reflex(bytes, REFLEX_REC);
