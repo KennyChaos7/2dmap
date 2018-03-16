@@ -10,15 +10,14 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -28,15 +27,15 @@ import java.util.concurrent.Executors;
 
 public class TCPUtil {
     private final String TAG = "=====" + getClass().getSimpleName().toLowerCase() + "===== ";
-    public final static int REFLEX_SENT = 0x21;
-    public final static int REFLEX_REC = 0x22;
-    public final static int REFLEX_STATE = 0x23;
-    private final String command_search_ip = "version:[1],?\n";
+    private final static int REFLEX_SENT = 0x21;
+    private final static int REFLEX_REC = 0x22;
+    private final static int REFLEX_STATE = 0x23;
+    private static final String command_search_ip = "version:[1],?\n";
 
     private int port = -1;
     private ExecutorService S = Executors.newSingleThreadExecutor();
     private ExecutorService R = Executors.newSingleThreadExecutor();
-    private Runnable runnable = null;
+    private Runnable searchRunnable = null;
     private String roomba_ip = "";
     private Socket client = null;
     private InputStream client_im = null;
@@ -48,7 +47,7 @@ public class TCPUtil {
         this.port = port;
         if (port != -1) {
             final byte[] command = command_search_ip.getBytes();
-            runnable = new Runnable() {
+            searchRunnable = new Runnable() {
                 @Override
                 public void run() {
                     DatagramSocket socket  = null;
@@ -62,6 +61,7 @@ public class TCPUtil {
                         if (packet.getData().length > 0)
                             roomba_ip = packet.getAddress().getHostAddress();
                         Log.e(TAG,"roomba_ip " + roomba_ip);
+                        socket.close();
                     } catch (SocketException e) {
                         e.printStackTrace();
                     } catch (UnknownHostException e) {
@@ -69,18 +69,17 @@ public class TCPUtil {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-//                    UDPSocketClient udpSocketClient = new UDPSocketClient();
-//                    for (int i = 0; i < 5; i++) {
-//                        String r = udpSocketClient.receive(command, _ip, 12002);
-//                        Log.e(TAG,"roomba_ip " + r);
-//                    }
                 }
             };
-            S.execute(runnable);
         }
     }
 
-    public synchronized void conn()
+    public void search()
+    {
+        S.execute(searchRunnable);
+    }
+
+    public void conn()
     {
         Log.e(TAG,"conn");
         if (Objects.equals(roomba_ip, ""))
@@ -96,8 +95,6 @@ public class TCPUtil {
                         // TODO reflex to listener client'S state
                         reflex("",REFLEX_STATE);
                         start_rec();
-                    } catch (SocketException | UnknownHostException e) {
-                        e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -107,7 +104,7 @@ public class TCPUtil {
         }
     }
 
-    public synchronized void send(final byte[] data)
+    public void send(final byte[] data)
     {
         if (Objects.equals(roomba_ip, ""))
             throw new NullPointerException("roomba ip is null");
@@ -133,7 +130,7 @@ public class TCPUtil {
         }
     }
 
-    public synchronized void start_rec()
+    public void start_rec()
     {
         Log.e(TAG,"start_rec");
         if (!Objects.equals(roomba_ip, "")) {
@@ -168,18 +165,30 @@ public class TCPUtil {
         }
     }
 
+    public void schedule()
+    {
+
+    }
+
     public void registerListener(TCPListener tcpListener)
     {
-        List<TCPListener> list = tcpListenerList;
-        synchronized (tcpListenerList)
+        boolean canInsert = true;
+        if (tcpListener != null)
         {
-            for (TCPListener listener : tcpListenerList) {
-                if (listener.hashCode() != tcpListener.hashCode()) {
+            List<TCPListener> list = tcpListenerList;
+            synchronized (tcpListenerList) {
+                for (TCPListener listener : tcpListenerList) {
+                    if (listener.hashCode() == tcpListener.hashCode()) {
+                        canInsert = false;
+                        break;
+                    }else
+                        canInsert = true;
+                }
+                if (canInsert)
+                {
                     list.add(tcpListener);
                 }
             }
-            if (tcpListenerList.size() == 0)
-                list.add(tcpListener);
         }
     }
 
@@ -196,13 +205,13 @@ public class TCPUtil {
         }
     }
 
-    private synchronized void reflex(Object o,int reflex_type)
+    private void reflex(Object o,int reflex_type)
     {
         byte[] b;
         List<TCPListener> list = tcpListenerList;
         synchronized (tcpListenerList)
         {
-            for (TCPListener listener : tcpListenerList) {
+            for (TCPListener listener : list) {
                 switch (reflex_type)
                 {
                     case REFLEX_REC:
@@ -223,5 +232,20 @@ public class TCPUtil {
 
     public void setRoomba_ip(String roomba_ip) {
         this.roomba_ip = roomba_ip;
+    }
+
+
+    class ScheduleCallable implements Callable<Object>
+    {
+        String command = "0";
+        public ScheduleCallable(String command)
+        {
+            this.command = command;
+        }
+        @Override
+        public Object call() throws Exception {
+
+            return null;
+        }
     }
 }

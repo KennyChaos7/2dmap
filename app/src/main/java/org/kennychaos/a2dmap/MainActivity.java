@@ -4,12 +4,9 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
-
-import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,9 +30,12 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static org.kennychaos.a2dmap.Utils.Transcode.__bytesToHexString;
+import static org.kennychaos.a2dmap.Utils.Transcode.__formatString;
+import static org.kennychaos.a2dmap.Utils.Transcode.__intToByteArray;
+
 public class MainActivity extends AppCompatActivity implements TCPListener, MapListener {
 
-    private String local_ip = "";
     private TCPUtil tcpUtil = null;
     private MapUtil mapUtil = null;
     private LogUtil logUtil = null;
@@ -57,9 +57,9 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager != null ? wifiManager.getConnectionInfo() : null;
         try {
-            local_ip = String.valueOf(InetAddress.getByName(__formatString(wifiInfo != null ? wifiInfo.getIpAddress() : 0))).substring(1);
-            logUtil.show("local_ip = " + local_ip , LogUtil.LOG_LEVEL_INFO);
-            tcpUtil = new TCPUtil(8088,local_ip);
+            String local_ip = String.valueOf(InetAddress.getByName(__formatString(wifiInfo != null ? wifiInfo.getIpAddress() : 0))).substring(1);
+            logUtil.show("local_ip = " + local_ip, LogUtil.LOG_LEVEL_INFO);
+            tcpUtil = new TCPUtil(8088, local_ip);
             tcpUtil.registerListener(this);
             mapUtil = new MapUtil();
             mapUtil.registerListener(this);
@@ -84,10 +84,14 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         }
     }
 
+    @Event(value = R.id.btn_search, type = Button.OnClickListener.class)
+    private void search(View view)
+    {
+        tcpUtil.search();
+    }
 
     @Event(value = R.id.btn_tcp,type = Button.OnClickListener.class)
     private void start_tcp(View view){
-//        tcpUtil.setRoomba_ip("192.168.1.102");
         tcpUtil.conn();
     }
 
@@ -105,69 +109,15 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
 
     }
 
-    /**
-     *
-     * @param src
-     * @return
-     */
-    private String bytesToHexString(byte[] src){
-        StringBuilder stringBuilder = new StringBuilder("");
-        if (src == null || src.length <= 0) {
-            return null;
-        }
-        for (byte aSrc : src) {
-            int v = aSrc & 0xFF;
-            stringBuilder.append("0x");
-            String hv = Integer.toHexString(v);
-            if (hv.length() < 2) {
-                stringBuilder.append(0);
-            }
-            stringBuilder.append(hv).append(",");
-        }
-        return stringBuilder.toString();
-    }
-
-    /**
-     *
-     * @param value
-     * @return
-     */
-    private String __formatString(int value) {
-        StringBuilder strValue = new StringBuilder();
-        byte[] ary = __intToByteArray(value);
-        for (int i = ary.length - 1; i >= 0; i--) {
-            strValue.append(ary[i] & 0xFF);
-            if (i > 0) {
-                strValue.append(".");
-            }
-        }
-        return strValue.toString();
-    }
-
-    /**
-     *
-     * @param value
-     * @return
-     */
-    private byte[] __intToByteArray(int value) {
-        byte[] b = new byte[4];
-        for (int i = 0; i < 4; i++) {
-            int offset = (b.length - 1 - i) * 8;
-            b[i] = (byte) ((value >>> offset) & 0xFF);
-        }
-        return b;
-    }
-
-
     @Override
     public void receive(byte[] bytes, int length) {
-        logUtil.show("receive = " + Arrays.toString(bytes) +" \nsource = " + bytesToHexString(bytes) + " \nlength = " + length,LogUtil.LOG_LEVEL_INFO);
+        logUtil.show("receive = " + Arrays.toString(bytes) +" \nsource = " + __bytesToHexString(bytes) + " \nlength = " + length,LogUtil.LOG_LEVEL_INFO);
         mapUtil.analysis(new String(bytes));
     }
 
     @Override
     public void sent(byte[] bytes, int length) {
-        logUtil.show("sent = " + Arrays.toString(bytes) +" \nsource = " + bytesToHexString(bytes) + " \nlength = " + length,LogUtil.LOG_LEVEL_INFO);
+        logUtil.show("sent = " + Arrays.toString(bytes) +" \nsource = " + __bytesToHexString(bytes) + " \nlength = " + length,LogUtil.LOG_LEVEL_INFO);
     }
 
     @Override

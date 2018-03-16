@@ -11,13 +11,22 @@
         android:id="@+id/btn_tcp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="tcp_conn"/>
+        android:layout_marginStart="8dp"
+        android:text="tcp_conn"
+        app:layout_constraintStart_toEndOf="@+id/btn_search"
+        tools:layout_editor_absoluteY="0dp"/>
+
+    <Button
+        android:id="@+id/btn_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@android:string/search_go"/>
 
     <Button
         android:id="@+id/btn_first"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="12dp"
         android:text="First_Time"
         app:layout_constraintStart_toEndOf="@+id/btn_tcp"
         tools:layout_editor_absoluteY="0dp"/>

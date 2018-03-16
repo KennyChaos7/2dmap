@@ -4,6 +4,7 @@ import android.nfc.Tag;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import org.kennychaos.a2dmap.Listener.MapListener;
 import org.kennychaos.a2dmap.Model.BlockMap;
@@ -21,6 +22,7 @@ import java.util.Vector;
  */
 
 public class MapUtil {
+    private final String TAG = "===" + getClass().getSimpleName() + "=== ";
     private final static byte TYPE_WHOLE_MAP_SMALL = 0;
     private final static byte TYPE_WHOLE_TRACK_SMALL = 1;
     private final static byte TYPE_WHOLE_TRACK_BIG = 2;
@@ -42,16 +44,21 @@ public class MapUtil {
 
     public void registerListener(MapListener mapListener)
     {
-        List<MapListener> listeners = mapListenerList;
-        synchronized (mapListenerList)
+        boolean canInsert = false;
+        if (mapListener != null)
         {
-            for (MapListener l : listeners)
-            {
-                if (l.hashCode() != mapListener.hashCode())
+            List<MapListener> listeners = mapListenerList;
+            synchronized (mapListenerList) {
+                for (MapListener l : listeners) {
+                    if (l.hashCode() == mapListener.hashCode()) {
+                        canInsert = false;
+                        break;
+                    }else
+                        canInsert = true;
+                }
+                if (canInsert)
                     listeners.add(mapListener);
             }
-            if (listeners.size() == 0)
-                listeners.add(mapListener);
         }
     }
 
@@ -72,19 +79,24 @@ public class MapUtil {
     public void analysis(String data)
     {
         initList();
-        MapData mapData = gson.fromJson(data,MapData.class);
-        Log.e("analysis",data);
-        if (mapData.map != null)
+        try {
+            MapData mapData = gson.fromJson(data, MapData.class);
+            Log.e(TAG,"analysis = " + data);
+            if (mapData.map != null)
+            {
+                // TODO analysis map
+                byte[] map_data_decode = Base64Util.decode(mapData.map);
+                setBlockMap(map_data_decode);
+            }
+            if (mapData.track != null)
+            {
+                // TODO analysis track
+                byte[] track_data_decode = Base64Util.decode(mapData.track);
+                setTrack(track_data_decode);
+            }
+        }catch (JsonSyntaxException e)
         {
-            // TODO analysis map
-            byte[] map_data_decode = Base64Util.decode(mapData.map);
-            setBlockMap(map_data_decode);
-        }
-        if (mapData.track != null)
-        {
-            // TODO analysis track
-            byte[] track_data_decode = Base64Util.decode(mapData.track);
-            setTrack(track_data_decode);
+            Log.e(TAG,"JsonSyntaxException");
         }
     }
 
@@ -138,7 +150,7 @@ public class MapUtil {
             array_data = bytes_delete(array_data,2 + 2 + 2 + data_length);
         }
         reflex(blockMapList,REFLEX_BLOCKMAPLIST_DATA);
-        Log.v("blockmap list ", Arrays.toString(blockMapList.toArray()));
+        Log.v(TAG, "blockmap list = " + Arrays.toString(blockMapList.toArray()));
     }
 
     private void setTrack(byte[] track_data_decode)
