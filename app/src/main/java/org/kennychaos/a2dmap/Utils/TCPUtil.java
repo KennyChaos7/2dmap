@@ -92,8 +92,8 @@ public class TCPUtil {
                         client = new Socket(roomba_ip,port);
                         client_im = client.getInputStream();
                         client_om = client.getOutputStream();
-                        // TODO reflex to listener client'S state
-                        reflex("",REFLEX_STATE);
+                        // TODO reflexToListener to listener client'S state
+                        reflexToListener("",REFLEX_STATE);
                         start_rec();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -120,8 +120,8 @@ public class TCPUtil {
                     try {
                         client_om.write(data);
                         client_om.flush();
-                        // TODO reflex to listener
-                        reflex(data,REFLEX_SENT);
+                        // TODO reflexToListener to listener
+                        reflexToListener(data,REFLEX_SENT);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -153,8 +153,8 @@ public class TCPUtil {
                                     if (d_l - l < 4096)
                                         d = new byte[d_l - l];
                                 }
-                                // TODO reflex to listener
-                                reflex(bytes, REFLEX_REC);
+                                // TODO reflexToListener to listener
+                                reflexToListener(bytes, REFLEX_REC);
                             }
                         }
                     } catch (IOException e) {
@@ -205,7 +205,7 @@ public class TCPUtil {
         }
     }
 
-    private void reflex(Object o,int reflex_type)
+    private void reflexToListener(Object o, int reflex_type)
     {
         byte[] b;
         List<TCPListener> list = tcpListenerList;

@@ -1,6 +1,5 @@
 package org.kennychaos.a2dmap.Utils;
 
-import android.nfc.Tag;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -35,6 +34,7 @@ public class MapUtil {
     private final static int REFLEX_TRACK_DATA = 0x33;
     private final static int REFLEX_BLOCKMAP_INFO = 0x34;
     private final static int REFLEX_TRACK_INFO = 0x35;
+    private final static int REFLEX_ERROR = 0x36;
 
     private List<BlockMap> blockMapList = Collections.synchronizedList(new Vector<BlockMap>());
     private Track track = new Track();
@@ -140,16 +140,16 @@ public class MapUtil {
                         blockMap_old.setIndex_in_whole_map(index_in_whole_map);
                         blockMap_old.setLength(data_length);
                         blockMap_old.setMapPointList(blockMap_new.getMapPointList());
-                        // TODO reflex to listener
-                        reflex(blockMap_new, REFLEX_BLOCKMAP_DATA);
-                        reflex(blockMap_new, REFLEX_BLOCKMAP_INFO);
+                        // TODO reflexToListener to listener
+                        reflexToListener(blockMap_new, REFLEX_BLOCKMAP_DATA);
+                        reflexToListener(blockMap_new, REFLEX_BLOCKMAP_INFO);
                     }
                 }
 
             }
             array_data = bytes_delete(array_data,2 + 2 + 2 + data_length);
         }
-        reflex(blockMapList,REFLEX_BLOCKMAPLIST_DATA);
+        reflexToListener(blockMapList,REFLEX_BLOCKMAPLIST_DATA);
         Log.v(TAG, "blockmap list = " + Arrays.toString(blockMapList.toArray()));
     }
 
@@ -179,9 +179,9 @@ public class MapUtil {
             // TODO reset track data
             track = new Track(index_begin,index_end,area_cleaned,analysis_bytes(data,count_bytes_mappoint));
         }
-        // TODO reflex to listener
-        reflex(track,REFLEX_TRACK_DATA);
-        reflex(track,REFLEX_TRACK_INFO);
+        // TODO reflexToListener to listener
+        reflexToListener(track,REFLEX_TRACK_DATA);
+        reflexToListener(track,REFLEX_TRACK_INFO);
     }
 
     private List<MapPoint> analysis_bytes(byte[] bytes,int x_begin , int y_begin) {
@@ -268,7 +268,7 @@ public class MapUtil {
         return new byte[]{};
     }
 
-    private void reflex(Object o,int type)
+    private void reflexToListener(Object o, int type)
     {
         List<MapListener> listeners = mapListenerList;
         synchronized (mapListenerList)
