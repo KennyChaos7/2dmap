@@ -1,5 +1,6 @@
 package org.kennychaos.a2dmap.Utils;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.kennychaos.a2dmap.Listener.TCPListener;
@@ -14,6 +15,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
@@ -27,40 +29,39 @@ import java.util.concurrent.Executors;
 
 public class TCPUtil {
     private final String TAG = "=====" + getClass().getSimpleName().toLowerCase() + "===== ";
-    private final static int REFLEX_SENT = 0x21;
-    private final static int REFLEX_REC = 0x22;
-    private final static int REFLEX_STATE = 0x23;
-    private static final String command_search_ip = "version:[1],?\n";
+    private static final String COMMAND_SEARCH_IP = "version:[1],?\n";
 
     private int port = -1;
     private ExecutorService S = Executors.newSingleThreadExecutor();
     private ExecutorService R = Executors.newSingleThreadExecutor();
     private Runnable searchRunnable = null;
-    private String roomba_ip = "";
+    private String roombaIP = "";
+    private String localhost = "";
     private Socket client = null;
     private InputStream client_im = null;
     private OutputStream client_om = null;
-
+    private HashMap<String,Object> hashMap = new HashMap<>();
     private List<TCPListener> tcpListenerList = Collections.synchronizedList(new Vector<TCPListener>());
 
-    public TCPUtil(final int port, final String local_ip) {
+    public TCPUtil(@NonNull final int port, @NonNull final String localhost) {
         this.port = port;
-        if (port != -1) {
-            final byte[] command = command_search_ip.getBytes();
-            searchRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    DatagramSocket socket  = null;
+        this.localhost = localhost;
+        searchRunnable = new Runnable() {
+            @Override
+            public void run() {
+                synchronized (roombaIP) {
+                    DatagramSocket socket = null;
                     try {
                         socket = new DatagramSocket(port);
-                        String _ip = local_ip.substring(0, local_ip.lastIndexOf(".")) + ".255";
-                        socket.send(new DatagramPacket(command,command.length, InetAddress.getByName(_ip),12002));
+                        String _ip = localhost.substring(0, localhost.lastIndexOf(".")) + ".255";
+                        socket.send(new DatagramPacket(COMMAND_SEARCH_IP.getBytes(), COMMAND_SEARCH_IP.getBytes().length, InetAddress.getByName(_ip), 12002));
                         byte[] bytes_packet = new byte[1024];
-                        DatagramPacket packet = new DatagramPacket(bytes_packet,bytes_packet.length);
+                        DatagramPacket packet = new DatagramPacket(bytes_packet, bytes_packet.length);
                         socket.receive(packet);
                         if (packet.getData().length > 0)
-                            roomba_ip = packet.getAddress().getHostAddress();
-                        Log.e(TAG,"roomba_ip " + roomba_ip);
+//                            roombaIP = packet.getAddress().getHostAddress();
+                            roombaIP = "192.168.233.200";
+                        Log.e(TAG, "roombaIP " + roombaIP);
                         socket.close();
                     } catch (SocketException e) {
                         e.printStackTrace();
@@ -70,8 +71,8 @@ public class TCPUtil {
                         e.printStackTrace();
                     }
                 }
-            };
-        }
+            }
+        };
     }
 
     public void search()
@@ -82,18 +83,20 @@ public class TCPUtil {
     public void conn()
     {
         Log.e(TAG,"conn");
-        if (Objects.equals(roomba_ip, ""))
+        if (Objects.equals(roombaIP, ""))
             throw new NullPointerException("roomba ip is null");
         else {
             Executors.newSingleThreadExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        client = new Socket(roomba_ip,port);
+                        client = new Socket(roombaIP,port);
                         client_im = client.getInputStream();
                         client_om = client.getOutputStream();
                         // TODO reflexToListener to listener client'S state
-                        reflexToListener("",REFLEX_STATE);
+                        hashMap.clear();
+                        hashMap.put("stateMessage","client is ready. ");
+                        reflexToListener(TCPListener.REFLEX_ON_STATE,hashMap);
                         start_rec();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -106,7 +109,7 @@ public class TCPUtil {
 
     public void send(final byte[] data)
     {
-        if (Objects.equals(roomba_ip, ""))
+        if (Objects.equals(roombaIP, ""))
             throw new NullPointerException("roomba ip is null");
         else if (client == null)
             throw new NullPointerException("client is null");
@@ -121,7 +124,9 @@ public class TCPUtil {
                         client_om.write(data);
                         client_om.flush();
                         // TODO reflexToListener to listener
-                        reflexToListener(data,REFLEX_SENT);
+                        hashMap.clear();
+                        hashMap.put("data",data);
+                        reflexToListener(TCPListener.REFLEX_ON_SEND,hashMap);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -133,7 +138,7 @@ public class TCPUtil {
     public void start_rec()
     {
         Log.e(TAG,"start_rec");
-        if (!Objects.equals(roomba_ip, "")) {
+        if (!Objects.equals(roombaIP, "")) {
             R.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -153,8 +158,11 @@ public class TCPUtil {
                                     if (d_l - l < 4096)
                                         d = new byte[d_l - l];
                                 }
+                                hashMap.clear();
+                                hashMap.put("data",bytes);
+                                hashMap.put("dataLength",d_l);
                                 // TODO reflexToListener to listener
-                                reflexToListener(bytes, REFLEX_REC);
+                                reflexToListener(TCPListener.REFLEX_ON_RECEIVE,hashMap);
                             }
                         }
                     } catch (IOException e) {
@@ -205,33 +213,48 @@ public class TCPUtil {
         }
     }
 
-    private void reflexToListener(Object o, int reflex_type)
+    private void reflexToListener(int reflex_type, HashMap<String,Object> hashMap)
     {
-        byte[] b;
         List<TCPListener> list = tcpListenerList;
         synchronized (tcpListenerList)
         {
+            byte[] bytes = null;
             for (TCPListener listener : list) {
                 switch (reflex_type)
                 {
-                    case REFLEX_REC:
-                        b = (byte[]) o;
-                        listener.receive(b,b.length);
+                    case TCPListener.REFLEX_ON_ERROR:
+                        int errorCode = (int) hashMap.get("errorCode");
+                        if (errorCode != 0)
+                        {
+                            String errorMessage = (String) hashMap.get("errorMessage");
+                            listener.onError(errorCode,errorMessage);
+                        }
                         break;
-                    case REFLEX_SENT:
-                        b = (byte[]) o;
-                        listener.sent(b,b.length);
+
+                    case TCPListener.REFLEX_ON_RECEIVE:
+                        bytes = (byte[]) hashMap.get("data");
+                        int length = (int) hashMap.get("dataLength");
+                        listener.onReceive(bytes,length);
+                        bytes = null;
                         break;
-                    case REFLEX_STATE:
-                        listener.state(roomba_ip,port, client != null && client.isConnected(),!R.isShutdown() && !R.isTerminated(),client != null && client.isConnected());
+
+                    case TCPListener.REFLEX_ON_SEND:
+                        bytes = (byte[]) hashMap.get("data");
+                        listener.onSend(bytes);
+                        bytes = null;
+                        break;
+
+                    case TCPListener.REFLEX_ON_STATE:
+                        String stateMessage = (String) hashMap.get("stateMessage");
+                        listener.onState(stateMessage);
                         break;
                 }
             }
         }
     }
 
-    public void setRoomba_ip(String roomba_ip) {
-        this.roomba_ip = roomba_ip;
+    public void setRoombaIP(String roombaIP) {
+        this.roombaIP = roombaIP;
     }
 
 

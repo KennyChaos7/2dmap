@@ -1,10 +1,12 @@
 package org.kennychaos.a2dmap.Utils;
 
+import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import org.kennychaos.a2dmap.BuildConfig;
 import org.kennychaos.a2dmap.Listener.MapListener;
 import org.kennychaos.a2dmap.Model.BlockMap;
 import org.kennychaos.a2dmap.Model.MapPoint;
@@ -22,6 +24,7 @@ import java.util.Vector;
 
 public class MapUtil {
     private final String TAG = "===" + getClass().getSimpleName() + "=== ";
+    /** data type **/
     private final static byte TYPE_WHOLE_MAP_SMALL = 0;
     private final static byte TYPE_WHOLE_TRACK_SMALL = 1;
     private final static byte TYPE_WHOLE_TRACK_BIG = 2;
@@ -29,14 +32,10 @@ public class MapUtil {
     private final static byte TYPE_ADD_MAP_BIG = 5;
     private final static byte TYPE_ADD_MAP_SMALL = 6;
     private final static byte TYPE_ADD_MAP_ANY = 7;
-    private final static int REFLEX_BLOCKMAP_DATA = 0x31;
-    private final static int REFLEX_BLOCKMAPLIST_DATA = 0x32;
-    private final static int REFLEX_TRACK_DATA = 0x33;
-    private final static int REFLEX_BLOCKMAP_INFO = 0x34;
-    private final static int REFLEX_TRACK_INFO = 0x35;
-    private final static int REFLEX_ERROR = 0x36;
 
     private List<BlockMap> blockMapList = Collections.synchronizedList(new Vector<BlockMap>());
+    private List<Integer> updateBlockMapIndexList = new ArrayList<>();
+    private int updateBlockMapCounts = -1;
     private Track track = new Track();
     private List<MapListener> mapListenerList = Collections.synchronizedList(new Vector<MapListener>());
     private boolean isInit = false;
@@ -44,22 +43,8 @@ public class MapUtil {
 
     public void registerListener(MapListener mapListener)
     {
-        boolean canInsert = false;
-        if (mapListener != null)
-        {
-            List<MapListener> listeners = mapListenerList;
-            synchronized (mapListenerList) {
-                for (MapListener l : listeners) {
-                    if (l.hashCode() == mapListener.hashCode()) {
-                        canInsert = false;
-                        break;
-                    }else
-                        canInsert = true;
-                }
-                if (canInsert)
-                    listeners.add(mapListener);
-            }
-        }
+        if (!this.mapListenerList.contains(mapListener))
+            this.mapListenerList.add(mapListener);
     }
 
     public void unregisterListener(MapListener mapListener)
@@ -97,6 +82,7 @@ public class MapUtil {
         }catch (JsonSyntaxException e)
         {
             Log.e(TAG,"JsonSyntaxException");
+            reflexToListener("this data is incomplete",MapListener.REFLEX_ON_ERROR);
         }
     }
 
@@ -104,7 +90,7 @@ public class MapUtil {
     {
         if (!isInit)
         {
-            for (int i = 0;i < 99 ; i++)
+            for (int i = 0;i < 100 ; i++)
                 blockMapList.add(new BlockMap(i));
             isInit = true;
         }
@@ -116,20 +102,24 @@ public class MapUtil {
         int data_length = 0;
 
         byte type = map_data_decode[0];
-        int count = to_int(map_data_decode,2,2);
+        int count = __toInt(map_data_decode,2,2);
 
         byte[] array_data = new byte[map_data_decode.length - 4];
         System.arraycopy(map_data_decode,4,array_data,0,array_data.length);
 
         for (int index = 0; index < count - 1 && array_data.length > 0;index ++ )
         {
-            index_in_whole_map = to_int(array_data,2,0);
-            history_id = to_int(array_data,2,2);
-            data_length = to_int(array_data,2,4);
+            index_in_whole_map = __toInt(array_data,2,0);
+            history_id = __toInt(array_data,2,2);
+            data_length = __toInt(array_data,2,4);
             if (data_length > 0) {
+                if (BuildConfig.DEBUG)
+                {
+                    Log.e(TAG,"index = " + index_in_whole_map + " data_length = " + data_length);
+                }
                 byte[] data_compress = new byte[data_length];
                 System.arraycopy(array_data, 6 , data_compress, 0, data_length);
-                byte[] data_uncompress = uncompress(data_compress, data_length);// 100x100
+                byte[] data_uncompress = __uncompress(data_compress, data_length);// 100x100
                 int x_begin = (index_in_whole_map - 1) % 10 * 100 ;
                 int y_begin = (index_in_whole_map - 1) / 10 * 100 ;
                 BlockMap blockMap_new = new BlockMap(history_id, index_in_whole_map, data_length, analysis_bytes(data_uncompress, x_begin, y_begin));
@@ -140,16 +130,13 @@ public class MapUtil {
                         blockMap_old.setIndex_in_whole_map(index_in_whole_map);
                         blockMap_old.setLength(data_length);
                         blockMap_old.setMapPointList(blockMap_new.getMapPointList());
-                        // TODO reflexToListener to listener
-                        reflexToListener(blockMap_new, REFLEX_BLOCKMAP_DATA);
-                        reflexToListener(blockMap_new, REFLEX_BLOCKMAP_INFO);
                     }
                 }
 
             }
-            array_data = bytes_delete(array_data,2 + 2 + 2 + data_length);
+            array_data = __bytesDelete(array_data,2 + 2 + 2 + data_length);
         }
-        reflexToListener(blockMapList,REFLEX_BLOCKMAPLIST_DATA);
+        reflexToListener(blockMapList,MapListener.REFLEX_RECEIVE_BLOCKMAPLIST);
         Log.v(TAG, "blockmap list = " + Arrays.toString(blockMapList.toArray()));
     }
 
@@ -157,9 +144,9 @@ public class MapUtil {
     {
         int type = track_data_decode[0];
         int count_bytes_mappoint = track_data_decode[1];
-        int area_cleaned = to_int(track_data_decode,2,2);
-        int index_begin = to_int(track_data_decode,2,4);
-        int index_end = to_int(track_data_decode,2,6);
+        int area_cleaned = __toInt(track_data_decode,2,2);
+        int index_begin = __toInt(track_data_decode,2,4);
+        int index_end = __toInt(track_data_decode,2,6);
         int length = track_data_decode.length - 8;
         byte[] data = new byte[length];
         System.arraycopy(track_data_decode,8,data,0,length);
@@ -180,8 +167,7 @@ public class MapUtil {
             track = new Track(index_begin,index_end,area_cleaned,analysis_bytes(data,count_bytes_mappoint));
         }
         // TODO reflexToListener to listener
-        reflexToListener(track,REFLEX_TRACK_DATA);
-        reflexToListener(track,REFLEX_TRACK_INFO);
+        reflexToListener(track,MapListener.REFLEX_RECEIVE_TRACK);
     }
 
     private List<MapPoint> analysis_bytes(byte[] bytes,int x_begin , int y_begin) {
@@ -212,15 +198,15 @@ public class MapUtil {
         List<MapPoint> mapPointList = new ArrayList<>();
         int interval = count_bytes_mappoint / 2;
         for (int i = 0; i <= bytes.length - count_bytes_mappoint; i+=count_bytes_mappoint ) {
-            int x = to_int(bytes, interval, i);
-            int y = to_int(bytes, interval, i + interval);
+            int x = __toInt(bytes, interval, i);
+            int y = __toInt(bytes, interval, i + interval);
             MapPoint mapPoint = new MapPoint(x,y,MapPoint.TYPE_TRACK);
             mapPointList.add(mapPoint);
         }
         return mapPointList;
     }
 
-    private byte[] uncompress(byte[] compress, int len) {
+    private byte[] __uncompress(byte[] compress, int len) {
         byte[] uncompress_buf = new byte[2500];
         int repeat_len = 0;
         int index = 0;
@@ -244,7 +230,7 @@ public class MapUtil {
         return uncompress_buf;
     }
 
-    private int to_int(byte[] bytes, int length, int start)
+    private int __toInt(byte[] bytes, int length, int start)
     {
         byte[] buffer = new byte[length];
         System.arraycopy(bytes, start, buffer, 0, length);
@@ -254,7 +240,7 @@ public class MapUtil {
         return result;
     }
 
-    private byte[] bytes_delete(byte[] target , int index)
+    private byte[] __bytesDelete(byte[] target , int index)
     {
         int l = target.length - index;
         byte[] r = new byte[l];
@@ -270,27 +256,30 @@ public class MapUtil {
 
     private void reflexToListener(Object o, int type)
     {
+        Track track = null;
         List<MapListener> listeners = mapListenerList;
         synchronized (mapListenerList)
         {
             for (MapListener l : listeners) {
                 switch (type) {
-                    case REFLEX_BLOCKMAP_DATA:
-                        l.receiveBlockMap((BlockMap) o);
+                    case MapListener.REFLEX_RECEIVE_SINGLE_BLOCKMAP:
+                        l.receiveSingleBlockMap((BlockMap) o);
                         break;
-                    case REFLEX_BLOCKMAPLIST_DATA:
-                        l.receiveBlockMapList((List<BlockMap>) o);
+
+                    case MapListener.REFLEX_RECEIVE_BLOCKMAPLIST:
+                        l.receiveBlockMapList((List<BlockMap>) o,updateBlockMapCounts,updateBlockMapIndexList);
+                        updateBlockMapCounts = -1;
+                        updateBlockMapIndexList.clear();
                         break;
-                    case REFLEX_TRACK_DATA:
-                        l.receiveTrack((Track) o);
+
+                    case MapListener.REFLEX_RECEIVE_TRACK:
+                        track = (Track) o;
+                        l.receiveTrack(track,track.getIndex_begin(),track.getIndex_end(),track.getArea_cleaned());
+                        track = null;
                         break;
-                    case REFLEX_BLOCKMAP_INFO:
-                        BlockMap blockMap = (BlockMap)o;
-                        l.receiveBlockMapInfo(blockMap.getHistory_id(),blockMap.getIndex_in_whole_map(),blockMap.getLength());
-                        break;
-                    case REFLEX_TRACK_INFO:
-                        Track track = (Track)o;
-                        l.receiveTrackInfo(track.getIndex_begin(),track.getIndex_end(),track.getArea_cleaned());
+
+                    case MapListener.REFLEX_ON_ERROR:
+                        
                         break;
                 }
             }

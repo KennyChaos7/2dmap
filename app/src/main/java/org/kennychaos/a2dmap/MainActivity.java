@@ -110,46 +110,42 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     }
 
     @Override
-    public void receive(byte[] bytes, int length) {
+    public void onReceive(byte[] bytes, int length) {
         logUtil.show("receive = " + Arrays.toString(bytes) +" \nsource = " + __bytesToHexString(bytes) + " \nlength = " + length,LogUtil.LOG_LEVEL_INFO);
         mapUtil.analysis(new String(bytes));
     }
 
     @Override
-    public void sent(byte[] bytes, int length) {
-        logUtil.show("sent = " + Arrays.toString(bytes) +" \nsource = " + __bytesToHexString(bytes) + " \nlength = " + length,LogUtil.LOG_LEVEL_INFO);
+    public void onSend(byte[] bytes) {
+        logUtil.show("sent = " + Arrays.toString(bytes) +" \nsource = " + __bytesToHexString(bytes) + " \nlength = " + bytes.length,LogUtil.LOG_LEVEL_INFO);
+
     }
 
     @Override
-    public void state(String roomba_ip, int port, boolean isConnected, boolean isRec, boolean isCanSend) {
-        logUtil.show("roomba_ip = " + roomba_ip + " port = " + port + " isConnected = " + isConnected,LogUtil.LOG_LEVEL_INFO);
+    public void onError(int errorCode, String errorMessage) {
+
     }
 
+    @Override
+    public void onState(String stateMessage) {
+        logUtil.show(stateMessage,LogUtil.LOG_LEVEL_INFO);
+    }
 
     @Override
-    public void receiveBlockMap(BlockMap blockMap) {
+    public void receiveSingleBlockMap(BlockMap blockMap) {
         logUtil.show("blockMap : " + blockMap.getDetails(),LogUtil.LOG_LEVEL_INFO);
     }
 
     @Override
-    public void receiveBlockMapList(List<BlockMap> blockMapList) {
+    public void receiveBlockMapList(List<BlockMap> blockMapList, int updateBlockMapCounts, List<Integer> updateBlockMapIndexList) {
         logUtil.show("blockMapList : " + blockMapList.size(),LogUtil.LOG_LEVEL_INFO);
         mapView.setBlockMapList(mapUtil.getBlockMapList());
     }
 
     @Override
-    public void receiveBlockMapInfo(int history_id, int index_in_whole_map, int length) {
-        logUtil.show("history_id = " + history_id + " index_in_whole_map = " + index_in_whole_map + " length = " + length , LogUtil.LOG_LEVEL_INFO);
-    }
-
-    @Override
-    public void receiveTrack(Track track) {
+    public void receiveTrack(Track track, int indexBegin, int indexEnd, int cleanedArea) {
         logUtil.show("track : " + track.getDetails(),LogUtil.LOG_LEVEL_INFO);
-        mapView.setTrack(mapUtil.getTrack());
+//        mapView.setTrack(mapUtil.getTrack());
     }
 
-    @Override
-    public void receiveTrackInfo(int index_begin, int index_end, int area_cleaned) {
-        logUtil.show("index_begin = " + index_begin + " index_end = " + index_end + " area_cleaned = " + area_cleaned , LogUtil.LOG_LEVEL_INFO);
-    }
 }

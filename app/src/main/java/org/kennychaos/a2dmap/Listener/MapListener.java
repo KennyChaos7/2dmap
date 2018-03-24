@@ -11,14 +11,16 @@ import java.util.List;
  */
 
 public interface MapListener {
+    int REFLEX_RECEIVE_BLOCKMAPLIST = 0x0035;
+    int REFLEX_RECEIVE_SINGLE_BLOCKMAP = 0x0036;
+    int REFLEX_RECEIVE_TRACK = 0x0037;
+    int REFLEX_ON_ERROR = 0x0038;
 
-    void receiveBlockMap(BlockMap blockMap);
+    void receiveSingleBlockMap(BlockMap blockMap);
 
-    void receiveBlockMapList(List<BlockMap> blockMapList);
+    void receiveBlockMapList(List<BlockMap> blockMapList,int updateBlockMapCounts,List<Integer> updateBlockMapIndexList);
 
-    void receiveBlockMapInfo(int history_id,int index_in_whole_map,int length);
+    void receiveTrack(Track track,int indexBegin,int indexEnd,int cleanedArea);
 
-    void receiveTrack(Track track);
-
-    void receiveTrackInfo(int index_begin, int index_end, int area_cleaned);
+    void onError(int errorCode,String errorMessage);
 }
