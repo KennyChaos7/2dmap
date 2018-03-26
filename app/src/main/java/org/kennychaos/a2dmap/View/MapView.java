@@ -164,7 +164,10 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
                 for (MapPoint m : blockMap.getMapPointList())
                 {
                     // TODO draw point
-                    draw(m.getX(),m.getY(),0,0,TYPE_BLOCK);
+                    if (m.getType() == 1)
+                        draw(m.getX(),m.getY(),0,0,TYPE_BLOCK);
+                    else if (m.getType() == 2)
+                        draw(m.getX(),m.getY(),0,0,TYPE_CLEANED);
                 }
         }
         
@@ -218,13 +221,13 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     private void setPaints(float scale) {
         paint_block = new Paint();
         paint_block.setColor(Color.parseColor("#4D4D4D"));
-        paint_block.setStrokeWidth(scale);
+        paint_block.setStrokeWidth(scale * 2);
         paint_cleaned = new Paint();
         paint_cleaned.setColor(Color.parseColor("#FF616D82"));
-        paint_cleaned.setStrokeWidth(scale);
+        paint_cleaned.setStrokeWidth(scale * 2);
         paint_track = new Paint();
         paint_track.setColor(Color.rgb(86, 147, 193));
-        paint_track.setStrokeWidth(scale * stroke);
+        paint_track.setStrokeWidth(scale * stroke * 2);
         paint_bot = new Paint();
         paint_bot.setColor(Color.parseColor("#E1E0B700"));
     }

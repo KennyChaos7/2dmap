@@ -114,12 +114,12 @@ public class MapUtil {
             data_length = __toInt(array_data,2,4);
             if (data_length > 0) {
                 if (BuildConfig.DEBUG)
-                {
                     Log.e(TAG,"index = " + index_in_whole_map + " data_length = " + data_length);
-                }
                 byte[] data_compress = new byte[data_length];
                 System.arraycopy(array_data, 6 , data_compress, 0, data_length);
                 byte[] data_uncompress = __uncompress(data_compress, data_length);// 100x100
+                if (BuildConfig.DEBUG)
+                    Log.e(TAG,"after uncompress size = " + data_uncompress.length);
                 int x_begin = (index_in_whole_map - 1) % 10 * 100 ;
                 int y_begin = (index_in_whole_map - 1) / 10 * 100 ;
                 BlockMap blockMap_new = new BlockMap(history_id, index_in_whole_map, data_length, analysis_bytes(data_uncompress, x_begin, y_begin));
