@@ -13,9 +13,9 @@ import java.util.Vector;
  */
 
 public class Track {
-    private int index_begin = -1;
-    private int index_end = -1;
-    private int area_cleaned = -1;
+    private int index_begin = 0;
+    private int index_end = 0;
+    private int area_cleaned = 0;
     private List<MapPoint> mapPointList = Collections.synchronizedList(new Vector<MapPoint>());
 
     public Track(){}
@@ -26,6 +26,17 @@ public class Track {
         this.index_end = index_end;
         this.area_cleaned = area_cleaned;
         this.mapPointList = mapPointList;
+    }
+
+    public void add(Track newTrack)
+    {
+        if (newTrack != null)
+        {
+            if (newTrack.getIndex_begin() == this.getIndex_end())
+            {
+
+            }
+        }
     }
 
     @Override

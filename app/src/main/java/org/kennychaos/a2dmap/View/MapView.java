@@ -31,7 +31,7 @@ import java.util.List;
 public class MapView extends View implements View.OnTouchListener ,GestureDetector.OnDoubleTapListener,GestureDetector.OnGestureListener,ScaleGestureDetector.OnScaleGestureListener {
     private final String TAG = "=====" + getClass().getSimpleName() + "=====";
 
-    private Paint paint_block, paint_cleaned, paint_track, paint_bot = null;
+    private Paint paint_block, paint_cleaned, paint_track, paint_bot, paint_gray = null;
     private Paint paint_cache = new Paint();
     private float scale_screen = 1f;
 
@@ -46,6 +46,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     private final int TYPE_BLOCK = 1;
     private final int TYPE_CLEANED = 2;
     private final int TYPE_TRACK = 9;
+    private final int TYPE_RED = 10;
     private List<BlockMap> blockMapList = new ArrayList<>();
     private Track track = new Track();
 
@@ -78,11 +79,6 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
         setOnTouchListener(this);
         gestureDetector = new GestureDetector(context,this);
         scaleGestureDetector = new ScaleGestureDetector(context,this);
-    }
-
-    public interface MapViewListener
-    {
-        void onClick(float point_x, float point_y, int point_type);
     }
 
     /**
@@ -151,7 +147,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
         }
     }
 
-    public void refresh() {
+    public synchronized void refresh() {
          /* 需要先清除上一次绘制时绘的机器位置 */
         Paint cleanPaint = new Paint();
         cleanPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
@@ -168,16 +164,17 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
                         draw(m.getX(),m.getY(),0,0,TYPE_BLOCK);
                     else if (m.getType() == 2)
                         draw(m.getX(),m.getY(),0,0,TYPE_CLEANED);
+                    else if (m.getType() != 0)
+                        draw(m.getX(),m.getY(),0,0,TYPE_RED);
                 }
         }
         
-        if (track.getIndex_begin() > 0) {
+        if (track.getIndex_begin() >= 0) {
             for (int index = 0; index + 1 < track.getMapPointList().size(); index++) {
                 MapPoint p = track.getMapPointList().get(index);
                 MapPoint p_next = track.getMapPointList().get(index + 1);
                 /* 绘制 */
-                if (p_next.getX() != 0 && p_next.getY() != 0)
-                    draw(p.getX(), p.getY(), p_next.getX(), p_next.getY(), TYPE_TRACK);
+                draw(p.getX(), p.getY(), p_next.getX(), p_next.getY(), TYPE_TRACK);
             }
 
             MapPoint botPoint = track.getMapPointList().get(track.getMapPointList().size() - 1);
@@ -220,16 +217,19 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
      */
     private void setPaints(float scale) {
         paint_block = new Paint();
-        paint_block.setColor(Color.parseColor("#4D4D4D"));
+        paint_block.setColor(Color.parseColor("#98F5FF"));
         paint_block.setStrokeWidth(scale * 2);
         paint_cleaned = new Paint();
         paint_cleaned.setColor(Color.parseColor("#FF616D82"));
         paint_cleaned.setStrokeWidth(scale * 2);
         paint_track = new Paint();
-        paint_track.setColor(Color.rgb(86, 147, 193));
+        paint_track.setColor(Color.RED);
         paint_track.setStrokeWidth(scale * stroke * 2);
         paint_bot = new Paint();
         paint_bot.setColor(Color.parseColor("#E1E0B700"));
+        paint_gray = new Paint();
+        paint_gray.setStrokeWidth(scale * 2);
+        paint_gray.setColor(Color.parseColor("#4D4D4D"));
     }
 
     /**
@@ -285,6 +285,9 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
                 break;
             case TYPE_TRACK:
                 canvas_lineCache.drawLine(( x + offset ) * scale_screen , ( y + offset ) * scale_screen , ( x_next + offset )* scale_screen , ( y_next + offset ) * scale_screen , paint_track);
+                break;
+            case TYPE_RED:
+                canvas_pointCache.drawPoint(x * scale_screen,y * scale_screen, paint_gray);
                 break;
         }
     }

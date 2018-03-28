@@ -4,6 +4,8 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -14,7 +16,6 @@ import org.kennychaos.a2dmap.Listener.MapListener;
 import org.kennychaos.a2dmap.Listener.TCPListener;
 import org.kennychaos.a2dmap.Model.BlockMap;
 import org.kennychaos.a2dmap.Model.Track;
-import org.kennychaos.a2dmap.Utils.Base64Util;
 import org.kennychaos.a2dmap.Utils.LogUtil;
 import org.kennychaos.a2dmap.Utils.MapUtil;
 import org.kennychaos.a2dmap.Utils.TCPUtil;
@@ -25,6 +26,7 @@ import org.xutils.x;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -42,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     private MapView mapView = null;
     private ExecutorService singleThreadPool = Executors.newSingleThreadExecutor();
     private boolean isRefresh = true;
+    private List<BlockMap> blockMapList = new ArrayList<>();
+    private Track track = new Track();
+
 
     @ViewInject(R.id.linear_mapview)
     private LinearLayout linear_mapview;
@@ -66,19 +71,6 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             mapView = new MapView(this);
             mapView.init(1f,"#D8B0B0B0",1000,1000);
             linear_mapview.addView(mapView);
-            singleThreadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    while (isRefresh) {
-                        mapView.refresh();
-                        try {
-                            Thread.sleep(5 * 1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -87,26 +79,65 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     @Event(value = R.id.btn_search, type = Button.OnClickListener.class)
     private void search(View view)
     {
+        mapView.clear();
         tcpUtil.search();
     }
 
     @Event(value = R.id.btn_tcp,type = Button.OnClickListener.class)
     private void start_tcp(View view){
+        mapView.clear();
         tcpUtil.conn();
     }
 
     @Event(value = R.id.btn_first,type = Button.OnClickListener.class)
     private void first(View view) {
-        String _ = Base64Util.encode(__intToByteArray(0));
+        mapView.clear();
+        String _ = Base64.encodeToString(__intToByteArray(0,4),Base64.NO_WRAP);
         JSONObject jo = new JSONObject();
         try {
             jo.put("map",_);
             jo.put("track",_);
-            tcpUtil.send(jo.toString().getBytes());
+            int jo_length = jo.toString().getBytes().length;
+            byte[] bytes_send = new byte[jo_length + 4];
+            byte[] temp = __intToByteArray(jo_length,4);
+            System.arraycopy(temp,0,bytes_send,0,4);
+            System.arraycopy(jo.toString().getBytes(),0,bytes_send,4,jo_length);
+            tcpUtil.send(bytes_send);
+            bytes_send = null;
+            temp = null;
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
 
+    @Event(value = R.id.btn_update_map,type = Button.OnClickListener.class)
+    private void updateMap(View v)
+    {
+        mapView.clear();
+        byte[] historyIdsToBytes = new byte[100 * 2];
+        for (int index = 0; index < 100; index++)
+        {
+            int historyId = this.blockMapList.get(index).getHistory_id();
+            byte[] temp = __intToByteArray(historyId,2);
+            System.arraycopy(temp,0,historyIdsToBytes,index * 2 , 2);
+        }
+        String _map = Base64.encodeToString(historyIdsToBytes,Base64.NO_WRAP);
+        String _track = Base64.encodeToString(__intToByteArray(this.track.getIndex_end(),2),Base64.NO_WRAP);
+        JSONObject jo = new JSONObject();
+        try {
+            jo.put("map",_map);
+            jo.put("track",_track);
+            int jo_length = jo.toString().getBytes().length;
+            byte[] bytes_send = new byte[jo_length + 4];
+            byte[] temp = __intToByteArray(jo_length,4);
+            System.arraycopy(temp,0,bytes_send,0,4);
+            System.arraycopy(jo.toString().getBytes(),0,bytes_send,4,jo_length);
+            tcpUtil.send(bytes_send);
+            bytes_send = null;
+            temp = null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -133,19 +164,27 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
 
     @Override
     public void receiveSingleBlockMap(BlockMap blockMap) {
-        logUtil.show("blockMap : " + blockMap.getDetails(),LogUtil.LOG_LEVEL_INFO);
+        logUtil.show("receiveSingleBlockMap : " + blockMap.getDetails(),LogUtil.LOG_LEVEL_INFO);
+        int index = blockMap.getIndex_in_whole_map();
+        this.blockMapList.set(index,blockMap);
+        mapView.setBlockMapList(mapUtil.getBlockMapList());
+        mapView.refresh();
     }
 
     @Override
     public void receiveBlockMapList(List<BlockMap> blockMapList, int updateBlockMapCounts, List<Integer> updateBlockMapIndexList) {
-        logUtil.show("blockMapList : " + blockMapList.size(),LogUtil.LOG_LEVEL_INFO);
+        logUtil.show("receiveBlockMapList : " + blockMapList.size(),LogUtil.LOG_LEVEL_INFO);
+        this.blockMapList = blockMapList;
         mapView.setBlockMapList(mapUtil.getBlockMapList());
+        mapView.refresh();
     }
 
     @Override
     public void receiveTrack(Track track, int indexBegin, int indexEnd, int cleanedArea) {
         logUtil.show("track : " + track.getDetails(),LogUtil.LOG_LEVEL_INFO);
-//        mapView.setTrack(mapUtil.getTrack());
+        this.track.add(track);
+        mapView.setTrack(mapUtil.getTrack());
+        mapView.refresh();
     }
 
 }

@@ -135,7 +135,7 @@ public class TCPUtil {
         }
     }
 
-    public void start_rec()
+    void start_rec()
     {
         Log.e(TAG,"start_rec");
         if (!Objects.equals(roombaIP, "")) {
@@ -154,7 +154,10 @@ public class TCPUtil {
                                     System.arraycopy(d, 0, bytes, l, _l);
                                     l += _l;
                                     if (l == d_l)
+                                    {
+                                        l = 0;
                                         break;
+                                    }
                                     if (d_l - l < 4096)
                                         d = new byte[d_l - l];
                                 }
@@ -173,10 +176,14 @@ public class TCPUtil {
         }
     }
 
-    public void schedule()
+    void stop_rec()
     {
-
+        Log.e(TAG,"stop_rec");
+        if (client != null && client.isConnected()) {
+            R.shutdown();
+        }
     }
+
 
     public void registerListener(TCPListener tcpListener)
     {

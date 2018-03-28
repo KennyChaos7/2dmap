@@ -12,7 +12,7 @@ import java.util.Vector;
 
 public class BlockMap {
 
-    private int history_id = -1;
+    private int history_id = 0;
     private int index_in_whole_map = -1;
     private int length = -1;
     private List<MapPoint> mapPointList = new ArrayList<>();

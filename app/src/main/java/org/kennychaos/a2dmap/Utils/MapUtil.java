@@ -1,6 +1,6 @@
 package org.kennychaos.a2dmap.Utils;
 
-import android.os.Build;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -13,7 +13,6 @@ import org.kennychaos.a2dmap.Model.MapPoint;
 import org.kennychaos.a2dmap.Model.Track;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
@@ -70,13 +69,13 @@ public class MapUtil {
             if (mapData.map != null)
             {
                 // TODO analysis map
-                byte[] map_data_decode = Base64Util.decode(mapData.map);
+                byte[] map_data_decode = Base64.decode(mapData.map,Base64.NO_WRAP);
                 setBlockMap(map_data_decode);
             }
             if (mapData.track != null)
             {
                 // TODO analysis track
-                byte[] track_data_decode = Base64Util.decode(mapData.track);
+                byte[] track_data_decode = Base64.decode(mapData.track,Base64.NO_WRAP);
                 setTrack(track_data_decode);
             }
         }catch (JsonSyntaxException e)
@@ -102,30 +101,30 @@ public class MapUtil {
         int data_length = 0;
 
         byte type = map_data_decode[0];
-        int count = __toInt(map_data_decode,2,2);
+        int count = __toIntLittle(map_data_decode,2,2);
 
         byte[] array_data = new byte[map_data_decode.length - 4];
         System.arraycopy(map_data_decode,4,array_data,0,array_data.length);
 
         for (int index = 0; index < count - 1 && array_data.length > 0;index ++ )
         {
-            index_in_whole_map = __toInt(array_data,2,0);
-            history_id = __toInt(array_data,2,2);
-            data_length = __toInt(array_data,2,4);
+            index_in_whole_map = __toIntLittle(array_data,2,0);
+            history_id = __toIntLittle(array_data,2,2);
+            data_length = __toIntLittle(array_data,2,4);
             if (data_length > 0) {
-                if (BuildConfig.DEBUG)
-                    Log.e(TAG,"index = " + index_in_whole_map + " data_length = " + data_length);
+//                if (BuildConfig.DEBUG)
+//                    Log.e(TAG,"index = " + index_in_whole_map + " data_length = " + data_length + " history_id = " + history_id);
                 byte[] data_compress = new byte[data_length];
                 System.arraycopy(array_data, 6 , data_compress, 0, data_length);
                 byte[] data_uncompress = __uncompress(data_compress, data_length);// 100x100
-                if (BuildConfig.DEBUG)
-                    Log.e(TAG,"after uncompress size = " + data_uncompress.length);
                 int x_begin = (index_in_whole_map - 1) % 10 * 100 ;
                 int y_begin = (index_in_whole_map - 1) / 10 * 100 ;
                 BlockMap blockMap_new = new BlockMap(history_id, index_in_whole_map, data_length, analysis_bytes(data_uncompress, x_begin, y_begin));
 
                 for (BlockMap blockMap_old : blockMapList) {
                     if (blockMap_old.getIndex_in_whole_map() == index_in_whole_map && blockMap_old.getHistory_id() < history_id) {
+                        if (BuildConfig.DEBUG)
+                            Log.e(TAG,"update index_in_whole_map = " + index_in_whole_map + " new_history_id = " + history_id + " old_history_id = " + blockMap_old.getHistory_id());
                         blockMap_old.setHistory_id(history_id);
                         blockMap_old.setIndex_in_whole_map(index_in_whole_map);
                         blockMap_old.setLength(data_length);
@@ -137,23 +136,22 @@ public class MapUtil {
             array_data = __bytesDelete(array_data,2 + 2 + 2 + data_length);
         }
         reflexToListener(blockMapList,MapListener.REFLEX_RECEIVE_BLOCKMAPLIST);
-        Log.v(TAG, "blockmap list = " + Arrays.toString(blockMapList.toArray()));
     }
 
     private void setTrack(byte[] track_data_decode)
     {
         int type = track_data_decode[0];
-        int count_bytes_mappoint = track_data_decode[1];
-        int area_cleaned = __toInt(track_data_decode,2,2);
-        int index_begin = __toInt(track_data_decode,2,4);
-        int index_end = __toInt(track_data_decode,2,6);
+        int count_bytes_mapPoint = track_data_decode[1];
+        int area_cleaned = __toIntLittle(track_data_decode,2,2);
+        int index_begin = __toIntLittle(track_data_decode,2,4);
+        int index_end = __toIntLittle(track_data_decode,2,6);
         int length = track_data_decode.length - 8;
         byte[] data = new byte[length];
         System.arraycopy(track_data_decode,8,data,0,length);
         if (index_begin != 0 && track.getIndex_end() == index_begin)
         {
             // TODO analysis track data
-            track.setMapPointList(analysis_bytes(data,count_bytes_mappoint));
+            track.setMapPointList(analysis_bytes(data,count_bytes_mapPoint));
             track.setIndex_begin(index_begin);
             track.setIndex_end(index_end);
             track.setArea_cleaned(area_cleaned);
@@ -164,7 +162,7 @@ public class MapUtil {
         }else if (index_begin == 0)
         {
             // TODO reset track data
-            track = new Track(index_begin,index_end,area_cleaned,analysis_bytes(data,count_bytes_mappoint));
+            track = new Track(index_begin,index_end,area_cleaned,analysis_bytes(data,count_bytes_mapPoint));
         }
         // TODO reflexToListener to listener
         reflexToListener(track,MapListener.REFLEX_RECEIVE_TRACK);
@@ -193,13 +191,13 @@ public class MapUtil {
         return mapPointList;
     }
 
-    private List<MapPoint> analysis_bytes(byte[] bytes,int count_bytes_mappoint)
+    private List<MapPoint> analysis_bytes(byte[] bytes,int count_bytes_mapPoint)
     {
         List<MapPoint> mapPointList = new ArrayList<>();
-        int interval = count_bytes_mappoint / 2;
-        for (int i = 0; i <= bytes.length - count_bytes_mappoint; i+=count_bytes_mappoint ) {
-            int x = __toInt(bytes, interval, i);
-            int y = __toInt(bytes, interval, i + interval);
+        int interval = count_bytes_mapPoint / 2;
+        for (int i = 0; i <= bytes.length - count_bytes_mapPoint; i+=count_bytes_mapPoint ) {
+            int x = __toIntBig(bytes, interval, i);
+            int y = __toIntBig(bytes, interval, i + interval);
             MapPoint mapPoint = new MapPoint(x,y,MapPoint.TYPE_TRACK);
             mapPointList.add(mapPoint);
         }
@@ -230,13 +228,23 @@ public class MapUtil {
         return uncompress_buf;
     }
 
-    private int __toInt(byte[] bytes, int length, int start)
+    private int __toIntLittle(byte[] bytes, int length, int start)
     {
         byte[] buffer = new byte[length];
         System.arraycopy(bytes, start, buffer, 0, length);
         int MASK = 0xFF;
         int result = 0;
         result += (buffer[1] & MASK) + ((buffer[0] & MASK) << 8);
+        return result;
+    }
+
+    private int __toIntBig(byte[] bytes, int length, int start)
+    {
+        byte[] buffer = new byte[length];
+        System.arraycopy(bytes, start, buffer, 0, length);
+        int MASK = 0xFF;
+        int result = 0;
+        result += (buffer[0] & MASK) + ((buffer[1] & MASK) << 8);
         return result;
     }
 
