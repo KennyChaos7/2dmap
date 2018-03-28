@@ -29,8 +29,11 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static org.kennychaos.a2dmap.Utils.Transcode.__bytesToHexString;
 import static org.kennychaos.a2dmap.Utils.Transcode.__formatString;
@@ -46,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     private boolean isRefresh = true;
     private List<BlockMap> blockMapList = new ArrayList<>();
     private Track track = new Track();
+    private ScheduledExecutorService scheduledThread = Executors.newScheduledThreadPool(1);
 
 
     @ViewInject(R.id.linear_mapview)
@@ -113,31 +117,36 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     @Event(value = R.id.btn_update_map,type = Button.OnClickListener.class)
     private void updateMap(View v)
     {
-        mapView.clear();
-        byte[] historyIdsToBytes = new byte[100 * 2];
-        for (int index = 0; index < 100; index++)
-        {
-            int historyId = this.blockMapList.get(index).getHistory_id();
-            byte[] temp = __intToByteArray(historyId,2);
-            System.arraycopy(temp,0,historyIdsToBytes,index * 2 , 2);
-        }
-        String _map = Base64.encodeToString(historyIdsToBytes,Base64.NO_WRAP);
-        String _track = Base64.encodeToString(__intToByteArray(this.track.getIndex_end(),2),Base64.NO_WRAP);
-        JSONObject jo = new JSONObject();
-        try {
-            jo.put("map",_map);
-            jo.put("track",_track);
-            int jo_length = jo.toString().getBytes().length;
-            byte[] bytes_send = new byte[jo_length + 4];
-            byte[] temp = __intToByteArray(jo_length,4);
-            System.arraycopy(temp,0,bytes_send,0,4);
-            System.arraycopy(jo.toString().getBytes(),0,bytes_send,4,jo_length);
-            tcpUtil.send(bytes_send);
-            bytes_send = null;
-            temp = null;
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        scheduledThread.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                byte[] historyIdsToBytes = new byte[100 * 2];
+                for (int index = 0; index < 100; index++)
+                {
+                    int historyId = blockMapList.get(index).getHistory_id();
+                    byte[] temp = __intToByteArray(historyId,2);
+                    System.arraycopy(temp,0,historyIdsToBytes,index * 2 , 2);
+                }
+                String _map = Base64.encodeToString(historyIdsToBytes,Base64.NO_WRAP);
+                String _track = Base64.encodeToString(__intToByteArray(0,2),Base64.NO_WRAP);
+                JSONObject jo = new JSONObject();
+                try {
+                    jo.put("map",_map);
+                    jo.put("track",_track);
+                    int jo_length = jo.toString().getBytes().length;
+                    byte[] bytes_send = new byte[jo_length + 4];
+                    byte[] temp = __intToByteArray(jo_length,4);
+                    System.arraycopy(temp,0,bytes_send,0,4);
+                    System.arraycopy(jo.toString().getBytes(),0,bytes_send,4,jo_length);
+                    tcpUtil.send(bytes_send);
+                    bytes_send = null;
+                    temp = null;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        },0,5, TimeUnit.SECONDS);
+
     }
 
     @Override

@@ -23,6 +23,8 @@ import org.kennychaos.a2dmap.Model.Track;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by yhrd_1 on 2016/12/20.
@@ -40,7 +42,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
 
     /* */
     private final float offset = 3/8;
-    private final float r = 0.5f;
+    private final float r = 5f;
     private final float stroke = 1/4;
 
     private final int TYPE_BLOCK = 1;
@@ -148,12 +150,6 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     }
 
     public synchronized void refresh() {
-         /* 需要先清除上一次绘制时绘的机器位置 */
-        Paint cleanPaint = new Paint();
-        cleanPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-        canvas_pointCache.drawPaint(cleanPaint);
-        canvas_lineCache.drawPaint(cleanPaint);
-
         for (BlockMap blockMap : blockMapList)
         {
             if (blockMap.getHistory_id() != -1)
@@ -168,8 +164,8 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
                         draw(m.getX(),m.getY(),0,0,TYPE_RED);
                 }
         }
-        
-        if (track.getIndex_begin() >= 0) {
+        clearTrack();
+        if (track.getIndex_begin() >= 0 && track.getMapPointList().size() > 0 ) {
             for (int index = 0; index + 1 < track.getMapPointList().size(); index++) {
                 MapPoint p = track.getMapPointList().get(index);
                 MapPoint p_next = track.getMapPointList().get(index + 1);
@@ -226,7 +222,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
         paint_track.setColor(Color.RED);
         paint_track.setStrokeWidth(scale * stroke * 2);
         paint_bot = new Paint();
-        paint_bot.setColor(Color.parseColor("#E1E0B700"));
+        paint_bot.setColor(Color.parseColor("#E0B700"));
         paint_gray = new Paint();
         paint_gray.setStrokeWidth(scale * 2);
         paint_gray.setColor(Color.parseColor("#4D4D4D"));
