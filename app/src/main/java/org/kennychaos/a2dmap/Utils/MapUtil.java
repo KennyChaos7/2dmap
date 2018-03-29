@@ -199,8 +199,8 @@ public class MapUtil {
         List<MapPoint> mapPointList = new ArrayList<>();
         int interval = count_bytes_mapPoint / 2;
         for (int i = 0; i <= bytes.length - count_bytes_mapPoint; i+=count_bytes_mapPoint ) {
-            int x = __toIntBig(bytes, interval, i);
-            int y = __toIntBig(bytes, interval, i + interval);
+            int x = __toIntLittle(bytes, interval, i);
+            int y = __toIntLittle(bytes, interval, i + interval);
             MapPoint mapPoint = new MapPoint(x,y,MapPoint.TYPE_TRACK);
             mapPointList.add(mapPoint);
         }

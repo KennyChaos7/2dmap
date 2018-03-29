@@ -34,8 +34,13 @@ public class Track {
         {
             if (newTrack.getIndex_begin() == this.getIndex_end())
             {
-
+                this.index_begin = this.index_end;
+                this.index_end = newTrack.getIndex_end();
+                this.mapPointList.addAll(newTrack.getMapPointList());
+                this.area_cleaned = newTrack.getArea_cleaned();
             }
+            else
+                this.index_end = 0;
         }
     }
 

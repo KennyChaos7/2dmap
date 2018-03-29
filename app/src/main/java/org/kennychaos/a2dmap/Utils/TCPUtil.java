@@ -58,9 +58,8 @@ public class TCPUtil {
                         byte[] bytes_packet = new byte[1024];
                         DatagramPacket packet = new DatagramPacket(bytes_packet, bytes_packet.length);
                         socket.receive(packet);
-                        if (packet.getData().length > 0)
-//                            roombaIP = packet.getAddress().getHostAddress();
-                            roombaIP = "192.168.233.200";
+                        if (packet.getData().length > 0 && Objects.equals(roombaIP, ""))
+                            roombaIP = packet.getAddress().getHostAddress();
                         Log.e(TAG, "roombaIP " + roombaIP);
                         socket.close();
                     } catch (SocketException e) {
@@ -144,27 +143,27 @@ public class TCPUtil {
                 @Override
                 public void run() {
                     byte[] buffers_whole_data_length = new byte[4];
-                    int l = 0, _l= -1;
+                    int should_receive_data_length = 0, receive_data_length= -1;
                     try {
                         if (client != null && client.isConnected()) {
                             while (client_im.read(buffers_whole_data_length) != -1) {
-                                int d_l = (buffers_whole_data_length[3] & 0xFF) + ((buffers_whole_data_length[2] & 0xFF) << 8) + ((buffers_whole_data_length[1] & 0xFF) << 16) + ((buffers_whole_data_length[0] & 0xFF) << 24);
-                                byte[] d = new byte[4096];
-                                byte[] bytes = new byte[d_l];
-                                while ((_l = client_im.read(d)) != -1) {
-                                    System.arraycopy(d, 0, bytes, l, _l);
-                                    l += _l;
-                                    if (l == d_l)
+                                int whole_data_length = (buffers_whole_data_length[3] & 0xFF) + ((buffers_whole_data_length[2] & 0xFF) << 8) + ((buffers_whole_data_length[1] & 0xFF) << 16) + ((buffers_whole_data_length[0] & 0xFF) << 24);
+                                byte[] packet = new byte[4096];
+                                byte[] bytes = new byte[whole_data_length];
+                                while ((receive_data_length = client_im.read(packet)) != -1) {
+                                    System.arraycopy(packet, 0, bytes, should_receive_data_length, receive_data_length);
+                                    should_receive_data_length += receive_data_length;
+                                    if (should_receive_data_length == whole_data_length)
                                     {
-                                        l = 0;
+                                        should_receive_data_length = 0;
                                         break;
                                     }
-                                    if (d_l - l < 4096)
-                                        d = new byte[d_l - l];
+                                    if (whole_data_length - should_receive_data_length < 4096)
+                                        packet = new byte[whole_data_length - should_receive_data_length];
                                 }
                                 hashMap.clear();
                                 hashMap.put("data",bytes);
-                                hashMap.put("dataLength",d_l);
+                                hashMap.put("dataLength",whole_data_length);
                                 // TODO reflexToListener to listener
                                 reflexToListener(TCPListener.REFLEX_ON_RECEIVE,hashMap);
                             }

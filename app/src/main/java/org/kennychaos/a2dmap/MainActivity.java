@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             logUtil.show("local_ip = " + local_ip, LogUtil.LOG_LEVEL_INFO);
             tcpUtil = new TCPUtil(8088, local_ip);
             tcpUtil.registerListener(this);
+            tcpUtil.setRoombaIP("192.168.233.200");
             mapUtil = new MapUtil();
             mapUtil.registerListener(this);
             mapView = new MapView(this);
@@ -128,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
                     System.arraycopy(temp,0,historyIdsToBytes,index * 2 , 2);
                 }
                 String _map = Base64.encodeToString(historyIdsToBytes,Base64.NO_WRAP);
-                String _track = Base64.encodeToString(__intToByteArray(0,2),Base64.NO_WRAP);
+                String _track = Base64.encodeToString(__intToByteArray(track.getIndex_end() ,2),Base64.NO_WRAP);
                 JSONObject jo = new JSONObject();
                 try {
                     jo.put("map",_map);
