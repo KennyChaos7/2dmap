@@ -135,6 +135,8 @@ public class MapUtil {
             }
             array_data = __bytesDelete(array_data,2 + 2 + 2 + data_length);
         }
+        System.gc();
+        // TODO reflexToListener to listener
         reflexToListener(blockMapList,MapListener.REFLEX_RECEIVE_BLOCKMAPLIST);
     }
 
@@ -164,6 +166,7 @@ public class MapUtil {
             // TODO reset track data
             track = new Track(index_begin,index_end,area_cleaned,analysis_bytes(data,count_bytes_mapPoint));
         }
+        System.gc();
         // TODO reflexToListener to listener
         reflexToListener(track,MapListener.REFLEX_RECEIVE_TRACK);
     }

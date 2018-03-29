@@ -133,9 +133,10 @@ public class TCPUtil {
                 }
             });
         }
+        System.gc();
     }
 
-    void start_rec()
+    public void start_rec()
     {
         Log.e(TAG,"start_rec");
         if (!Objects.equals(roombaIP, "")) {
@@ -176,7 +177,7 @@ public class TCPUtil {
         }
     }
 
-    void stop_rec()
+    public void stop_rec()
     {
         Log.e(TAG,"stop_rec");
         if (client != null && client.isConnected()) {
@@ -239,14 +240,14 @@ public class TCPUtil {
                         break;
 
                     case TCPListener.REFLEX_ON_RECEIVE:
-                        bytes = (byte[]) hashMap.get("data");
-                        int length = (int) hashMap.get("dataLength");
+                        bytes = hashMap.get("data") != null ?  (byte[])hashMap.get("data") : null ;
+                        int length = hashMap.get("dataLength") != null ? (int) hashMap.get("dataLength") : 0;
                         listener.onReceive(bytes,length);
                         bytes = null;
                         break;
 
                     case TCPListener.REFLEX_ON_SEND:
-                        bytes = (byte[]) hashMap.get("data");
+                        bytes = hashMap.get("data") != null ?  (byte[])hashMap.get("data") : null ;
                         listener.onSend(bytes);
                         bytes = null;
                         break;
@@ -258,6 +259,7 @@ public class TCPUtil {
                 }
             }
         }
+        System.gc();
     }
 
     public void setRoombaIP(String roombaIP) {

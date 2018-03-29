@@ -149,16 +149,29 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
 
     }
 
+    @Event(value = R.id.btn_stop,type = Button.OnClickListener.class)
+    private void stop_clear(View view)
+    {
+        mapView.clear();
+        tcpUtil.stop_rec();
+        singleThreadPool.shutdown();
+        this.blockMapList.clear();
+        this.track =  new Track();
+        mapView.setBlockMapList(this.blockMapList);
+        mapView.setTrack(this.track);
+    }
+
     @Override
     public void onReceive(byte[] bytes, int length) {
         logUtil.show("receive = " + Arrays.toString(bytes) +" \nsource = " + __bytesToHexString(bytes) + " \nlength = " + length,LogUtil.LOG_LEVEL_INFO);
-        mapUtil.analysis(new String(bytes));
+        if (length != 0 && bytes != null)
+            mapUtil.analysis(new String(bytes));
     }
 
     @Override
     public void onSend(byte[] bytes) {
-        logUtil.show("sent = " + Arrays.toString(bytes) +" \nsource = " + __bytesToHexString(bytes) + " \nlength = " + bytes.length,LogUtil.LOG_LEVEL_INFO);
-
+        if (bytes != null)
+            logUtil.show("sent = " + Arrays.toString(bytes) +" \nsource = " + __bytesToHexString(bytes) + " \nlength = " + bytes.length,LogUtil.LOG_LEVEL_INFO);
     }
 
     @Override
