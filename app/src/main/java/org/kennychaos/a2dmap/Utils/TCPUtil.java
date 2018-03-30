@@ -139,40 +139,41 @@ public class TCPUtil {
     {
         Log.e(TAG,"start_rec");
         if (!Objects.equals(roombaIP, "")) {
-            R.execute(new Runnable() {
-                @Override
-                public void run() {
-                    byte[] buffers_whole_data_length = new byte[4];
-                    int should_receive_data_length = 0, receive_data_length= -1;
-                    try {
-                        if (client != null && client.isConnected()) {
-                            while (client_im.read(buffers_whole_data_length) != -1) {
-                                int whole_data_length = (buffers_whole_data_length[3] & 0xFF) + ((buffers_whole_data_length[2] & 0xFF) << 8) + ((buffers_whole_data_length[1] & 0xFF) << 16) + ((buffers_whole_data_length[0] & 0xFF) << 24);
-                                byte[] packet = new byte[4096];
-                                byte[] bytes = new byte[whole_data_length];
-                                while ((receive_data_length = client_im.read(packet)) != -1) {
-                                    System.arraycopy(packet, 0, bytes, should_receive_data_length, receive_data_length);
-                                    should_receive_data_length += receive_data_length;
-                                    if (should_receive_data_length == whole_data_length)
-                                    {
-                                        should_receive_data_length = 0;
-                                        break;
+            if (!R.isShutdown()) {
+                R.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        byte[] buffers_whole_data_length = new byte[4];
+                        int should_receive_data_length = 0, receive_data_length = -1;
+                        try {
+                            if (client != null && client.isConnected()) {
+                                while (client_im.read(buffers_whole_data_length) != -1) {
+                                    int whole_data_length = (buffers_whole_data_length[3] & 0xFF) + ((buffers_whole_data_length[2] & 0xFF) << 8) + ((buffers_whole_data_length[1] & 0xFF) << 16) + ((buffers_whole_data_length[0] & 0xFF) << 24);
+                                    byte[] packet = new byte[4096];
+                                    byte[] bytes = new byte[whole_data_length];
+                                    while ((receive_data_length = client_im.read(packet)) != -1) {
+                                        System.arraycopy(packet, 0, bytes, should_receive_data_length, receive_data_length);
+                                        should_receive_data_length += receive_data_length;
+                                        if (should_receive_data_length == whole_data_length) {
+                                            should_receive_data_length = 0;
+                                            break;
+                                        }
+                                        if (whole_data_length - should_receive_data_length < 4096)
+                                            packet = new byte[whole_data_length - should_receive_data_length];
                                     }
-                                    if (whole_data_length - should_receive_data_length < 4096)
-                                        packet = new byte[whole_data_length - should_receive_data_length];
+                                    hashMap.clear();
+                                    hashMap.put("data", bytes);
+                                    hashMap.put("dataLength", whole_data_length);
+                                    // TODO reflexToListener to listener
+                                    reflexToListener(TCPListener.REFLEX_ON_RECEIVE, hashMap);
                                 }
-                                hashMap.clear();
-                                hashMap.put("data",bytes);
-                                hashMap.put("dataLength",whole_data_length);
-                                // TODO reflexToListener to listener
-                                reflexToListener(TCPListener.REFLEX_ON_RECEIVE,hashMap);
                             }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
-                }
-            });
+                });
+            }
         }
     }
 

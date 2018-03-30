@@ -70,13 +70,15 @@ public class MapUtil {
             {
                 // TODO analysis map
                 byte[] map_data_decode = Base64.decode(mapData.map,Base64.NO_WRAP);
-                setBlockMap(map_data_decode);
+                if (map_data_decode.length > 0)
+                    setBlockMap(map_data_decode);
             }
             if (mapData.track != null)
             {
                 // TODO analysis track
                 byte[] track_data_decode = Base64.decode(mapData.track,Base64.NO_WRAP);
-                setTrack(track_data_decode);
+                if (track_data_decode.length > 0)
+                    setTrack(track_data_decode);
             }
         }catch (JsonSyntaxException e)
         {

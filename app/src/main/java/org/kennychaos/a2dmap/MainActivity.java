@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
 
 
     @ViewInject(R.id.linear_mapview)
-    private LinearLayout linear_mapview;
+    private LinearLayout linear_mapView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             mapUtil.registerListener(this);
             mapView = new MapView(this);
             mapView.init(1f,"#D8B0B0B0",1000,1000);
-            linear_mapview.addView(mapView);
+            linear_mapView.addView(mapView);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
