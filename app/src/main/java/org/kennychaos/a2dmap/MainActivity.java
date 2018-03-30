@@ -5,9 +5,7 @@ import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 
 import org.json.JSONException;
@@ -29,15 +27,14 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.kennychaos.a2dmap.Utils.Transcode.__bytesToHexString;
-import static org.kennychaos.a2dmap.Utils.Transcode.__formatString;
-import static org.kennychaos.a2dmap.Utils.Transcode.__intToByteArray;
+import static org.kennychaos.a2dmap.Utils.TransCode.__bytesToHexString;
+import static org.kennychaos.a2dmap.Utils.TransCode.__formatString;
+import static org.kennychaos.a2dmap.Utils.TransCode.__intToByteArrayLittle;
 
 public class MainActivity extends AppCompatActivity implements TCPListener, MapListener {
 
@@ -81,30 +78,30 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         }
     }
 
-    @Event(value = R.id.btn_search, type = Button.OnClickListener.class)
+    @Event(value = R.id.btn_search)
     private void search(View view)
     {
         mapView.clear();
         tcpUtil.search();
     }
 
-    @Event(value = R.id.btn_tcp,type = Button.OnClickListener.class)
+    @Event(value = R.id.btn_tcp)
     private void start_tcp(View view){
         mapView.clear();
         tcpUtil.conn();
     }
 
-    @Event(value = R.id.btn_first,type = Button.OnClickListener.class)
+    @Event(value = R.id.btn_first)
     private void first(View view) {
         mapView.clear();
-        String _ = Base64.encodeToString(__intToByteArray(0,4),Base64.NO_WRAP);
+        String _ = Base64.encodeToString(__intToByteArrayLittle(0,4),Base64.NO_WRAP);
         JSONObject jo = new JSONObject();
         try {
             jo.put("map",_);
             jo.put("track",_);
             int jo_length = jo.toString().getBytes().length;
             byte[] bytes_send = new byte[jo_length + 4];
-            byte[] temp = __intToByteArray(jo_length,4);
+            byte[] temp = __intToByteArrayLittle(jo_length,4);
             System.arraycopy(temp,0,bytes_send,0,4);
             System.arraycopy(jo.toString().getBytes(),0,bytes_send,4,jo_length);
             tcpUtil.send(bytes_send);
@@ -115,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         }
     }
 
-    @Event(value = R.id.btn_update_map,type = Button.OnClickListener.class)
+    @Event(value = R.id.btn_update_map)
     private void updateMap(View v)
     {
         scheduledThread.scheduleAtFixedRate(new Runnable() {
@@ -125,18 +122,18 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
                 for (int index = 0; index < 100; index++)
                 {
                     int historyId = blockMapList.get(index).getHistory_id();
-                    byte[] temp = __intToByteArray(historyId,2);
+                    byte[] temp = __intToByteArrayLittle(historyId,2);
                     System.arraycopy(temp,0,historyIdsToBytes,index * 2 , 2);
                 }
                 String _map = Base64.encodeToString(historyIdsToBytes,Base64.NO_WRAP);
-                String _track = Base64.encodeToString(__intToByteArray(track.getIndex_end() ,2),Base64.NO_WRAP);
+                String _track = Base64.encodeToString(__intToByteArrayLittle(track.getIndex_end() ,2),Base64.NO_WRAP);
                 JSONObject jo = new JSONObject();
                 try {
                     jo.put("map",_map);
                     jo.put("track",_track);
                     int jo_length = jo.toString().getBytes().length;
                     byte[] bytes_send = new byte[jo_length + 4];
-                    byte[] temp = __intToByteArray(jo_length,4);
+                    byte[] temp = __intToByteArrayLittle(jo_length,4);
                     System.arraycopy(temp,0,bytes_send,0,4);
                     System.arraycopy(jo.toString().getBytes(),0,bytes_send,4,jo_length);
                     tcpUtil.send(bytes_send);
@@ -150,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
 
     }
 
-    @Event(value = R.id.btn_stop,type = Button.OnClickListener.class)
+    @Event(value = R.id.btn_stop)
     private void stop_clear(View view)
     {
         mapView.clear();

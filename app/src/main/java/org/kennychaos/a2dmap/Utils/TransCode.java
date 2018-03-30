@@ -4,7 +4,7 @@ package org.kennychaos.a2dmap.Utils;
  * Created by Kenny on 18-3-15.
  */
 
-public class Transcode {
+public class TransCode {
 
     /**
      *
@@ -35,7 +35,7 @@ public class Transcode {
      */
     public static String __formatString(int value) {
         StringBuilder strValue = new StringBuilder();
-        byte[] ary = __intToByteArray(value , 4);
+        byte[] ary = __intToByteArrayLittle(value , 4);
         for (int i = ary.length - 1; i >= 0; i--) {
             strValue.append(ary[i] & 0xFF);
             if (i > 0) {
@@ -50,7 +50,7 @@ public class Transcode {
      * @param value
      * @return
      */
-    public static byte[] __intToByteArray(int value,int length) {
+    public static byte[] __intToByteArrayLittle(int value, int length) {
         byte[] b = new byte[length];
         for (int i = 0; i < length; i++) {
             int offset = (b.length - 1 - i) * 8;

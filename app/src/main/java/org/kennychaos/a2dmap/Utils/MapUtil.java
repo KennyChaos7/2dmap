@@ -101,16 +101,16 @@ public class MapUtil {
         int data_length = 0;
 
         byte type = map_data_decode[0];
-        int count = __toIntLittle(map_data_decode,2,2);
+        int count = __toIntBig(map_data_decode,2,2);
 
         byte[] array_data = new byte[map_data_decode.length - 4];
         System.arraycopy(map_data_decode,4,array_data,0,array_data.length);
 
         for (int index = 0; index < count - 1 && array_data.length > 0;index ++ )
         {
-            index_in_whole_map = __toIntLittle(array_data,2,0);
-            history_id = __toIntLittle(array_data,2,2);
-            data_length = __toIntLittle(array_data,2,4);
+            index_in_whole_map = __toIntBig(array_data,2,0);
+            history_id = __toIntBig(array_data,2,2);
+            data_length = __toIntBig(array_data,2,4);
             if (data_length > 0) {
 //                if (BuildConfig.DEBUG)
 //                    Log.e(TAG,"index = " + index_in_whole_map + " data_length = " + data_length + " history_id = " + history_id);
@@ -144,9 +144,9 @@ public class MapUtil {
     {
         int type = track_data_decode[0];
         int count_bytes_mapPoint = track_data_decode[1];
-        int area_cleaned = __toIntLittle(track_data_decode,2,2);
-        int index_begin = __toIntLittle(track_data_decode,2,4);
-        int index_end = __toIntLittle(track_data_decode,2,6);
+        int area_cleaned = __toIntBig(track_data_decode,2,2);
+        int index_begin = __toIntBig(track_data_decode,2,4);
+        int index_end = __toIntBig(track_data_decode,2,6);
         int length = track_data_decode.length - 8;
         byte[] data = new byte[length];
         System.arraycopy(track_data_decode,8,data,0,length);
@@ -199,8 +199,8 @@ public class MapUtil {
         List<MapPoint> mapPointList = new ArrayList<>();
         int interval = count_bytes_mapPoint / 2;
         for (int i = 0; i <= bytes.length - count_bytes_mapPoint; i+=count_bytes_mapPoint ) {
-            int x = __toIntLittle(bytes, interval, i);
-            int y = __toIntLittle(bytes, interval, i + interval);
+            int x = __toIntBig(bytes, interval, i);
+            int y = __toIntBig(bytes, interval, i + interval);
             MapPoint mapPoint = new MapPoint(x,y,MapPoint.TYPE_TRACK);
             mapPointList.add(mapPoint);
         }
