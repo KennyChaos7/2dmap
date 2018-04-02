@@ -23,8 +23,6 @@ import org.kennychaos.a2dmap.Model.Track;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by yhrd_1 on 2016/12/20.
@@ -48,7 +46,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     private final int TYPE_BLOCK = 1;
     private final int TYPE_CLEANED = 2;
     private final int TYPE_TRACK = 9;
-    private final int TYPE_RED = 10;
+    private final int TYPE_UNCLEANED = 10;
     private List<BlockMap> blockMapList = new ArrayList<>();
     private Track track = new Track();
 
@@ -115,40 +113,6 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
         }
     }
 
-
-    /**
-     *
-     * @param scale_screen
-     * @param bg_color_string
-     * @param view_width
-     * @param view_height
-     * @param paint_block_color
-     * @param paint_cleaned_color
-     * @param paint_track_color
-     * @param paint_bot_color
-     */
-    public void init(float scale_screen , String bg_color_string , int view_width , int view_height , String paint_block_color , String paint_cleaned_color , String paint_track_color , String paint_bot_color ){
-        int bg_color = 0;
-        try {
-            bg_color = Color.parseColor(bg_color_string);
-        }catch (IllegalArgumentException e)
-        {
-            if (BuildConfig.DEBUG)
-                Log.e(TAG,"传入的颜色String有误 - " + bg_color_string);
-            bg_color = Color.parseColor("#D8B0B0B0");
-        }finally {
-            bitmap_pointCache = Bitmap.createBitmap(view_width,view_height, Bitmap.Config.ARGB_8888);
-            canvas_pointCache = new Canvas(bitmap_pointCache);
-            bitmap_lineCache = Bitmap.createBitmap(view_width,view_height, Bitmap.Config.ARGB_8888);
-            canvas_lineCache = new Canvas(bitmap_lineCache);
-            setLayoutParams(new ViewGroup.LayoutParams(view_width,view_height));
-            setBackgroundColor(bg_color);
-            this.scale_screen = scale_screen;
-            setPaints(this.scale_screen,paint_block_color,paint_cleaned_color,paint_track_color,paint_bot_color);
-            setClickable(true);
-        }
-    }
-
     public synchronized void refresh() {
         for (BlockMap blockMap : blockMapList)
         {
@@ -161,7 +125,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
                     else if (m.getType() == 2)
                         draw(m.getX(),m.getY(),0,0,TYPE_CLEANED);
                     else if (m.getType() != 0)
-                        draw(m.getX(),m.getY(),0,0,TYPE_RED);
+                        draw(m.getX(),m.getY(),0,0, TYPE_UNCLEANED);
                 }
         }
         clearTrack();
@@ -287,7 +251,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
             case TYPE_TRACK:
                 canvas_lineCache.drawLine(( x + offset ) * scale_screen , ( y + offset ) * scale_screen , ( x_next + offset )* scale_screen , ( y_next + offset ) * scale_screen , paint_track);
                 break;
-            case TYPE_RED:
+            case TYPE_UNCLEANED:
                 canvas_pointCache.drawPoint(x * scale_screen,y * scale_screen, paint_gray);
                 break;
         }

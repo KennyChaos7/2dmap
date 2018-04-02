@@ -13,10 +13,26 @@ import java.util.Vector;
  */
 
 public class Track {
+    
+    /**
+     * 该轨迹的启始序号
+     */
     private int index_begin = 0;
+
+    /**
+     * 该轨迹的末序号
+     */
     private int index_end = 0;
+
+    /**
+     * 清扫面积
+     */
     private int area_cleaned = 0;
-    private List<MapPoint> mapPointList = Collections.synchronizedList(new Vector<MapPoint>());
+
+    /**
+     * 该轨迹的数据
+     */
+    private List<MapPoint> mapPointList = new ArrayList<>();
 
     public Track(){}
 
@@ -28,10 +44,19 @@ public class Track {
         this.mapPointList = mapPointList;
     }
 
+    /**
+     * 增加轨迹
+     */
     public void add(Track newTrack)
     {
         if (newTrack != null)
         {
+            /**
+             * 只有当前上一次轨迹数据的末点序号跟新接受到轨迹的启始序号一样才能证明是上一段轨迹的延续
+             * 否则只能从新获取
+             * 
+             * ps: 此app轨迹都是使用从头获取的方式来
+             */
             if (newTrack.getIndex_begin() == this.getIndex_end())
             {
                 this.index_begin = this.index_end;

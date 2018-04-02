@@ -23,29 +23,67 @@ import java.util.Vector;
 
 public class MapUtil {
     private final String TAG = "===" + getClass().getSimpleName() + "=== ";
-    /** data type **/
+    /** receive data type **/
+    @Deprecated
     private final static byte TYPE_WHOLE_MAP_SMALL = 0;
+    @Deprecated
     private final static byte TYPE_WHOLE_TRACK_SMALL = 1;
+    @Deprecated
     private final static byte TYPE_WHOLE_TRACK_BIG = 2;
+    @Deprecated
     private final static byte TYPE_ADD_TRACK_BIG = 4;
+    @Deprecated
     private final static byte TYPE_ADD_MAP_BIG = 5;
+    @Deprecated
     private final static byte TYPE_ADD_MAP_SMALL = 6;
+    @Deprecated
     private final static byte TYPE_ADD_MAP_ANY = 7;
 
+    /**
+     * 用于接收分块地图数据
+     */
     private List<BlockMap> blockMapList = Collections.synchronizedList(new Vector<BlockMap>());
+
+    /**
+     * 原用于存储此次更新的分块地图，但由于更新频繁且内存需要控制好
+     */
+    @Deprecated
     private List<Integer> updateBlockMapIndexList = new ArrayList<>();
+    /**
+     * 原用于存储此次更新的分块地图的数目，但（原因如上）
+     */
+    @Deprecated
     private int updateBlockMapCounts = -1;
+
+    /**
+     * 用于接收轨迹
+     */
     private Track track = new Track();
+
     private List<MapListener> mapListenerList = Collections.synchronizedList(new Vector<MapListener>());
+
+    /**
+     * 是否初始化的标识
+     */
     private boolean isInit = false;
+
+    /**
+     * 解析json数据，第三方库
+     */
     private Gson gson = new Gson();
 
+    /**
+     * 注册监听
+     */
     public void registerListener(MapListener mapListener)
     {
         if (!this.mapListenerList.contains(mapListener))
             this.mapListenerList.add(mapListener);
     }
 
+    /**
+     * 取消监听
+     */
     public void unregisterListener(MapListener mapListener)
     {
         List<MapListener> listeners = mapListenerList;
@@ -64,6 +102,9 @@ public class MapUtil {
     {
         initList();
         try {
+            /**
+             * 将数据转化成json
+             */
             MapData mapData = gson.fromJson(data, MapData.class);
             Log.e(TAG,"analysis = " + data);
             if (mapData.map != null)
@@ -102,6 +143,9 @@ public class MapUtil {
         int history_id = -1;
         int data_length = 0;
 
+        /**
+         * 根据协议来处理
+         */
         byte type = map_data_decode[0];
         int count = __toIntBig(map_data_decode,2,2);
 
@@ -110,6 +154,9 @@ public class MapUtil {
 
         for (int index = 0; index < count - 1 && array_data.length > 0;index ++ )
         {
+            /**
+             * 根据协议来处理
+             */
             index_in_whole_map = __toIntBig(array_data,2,0);
             history_id = __toIntBig(array_data,2,2);
             data_length = __toIntBig(array_data,2,4);
@@ -142,8 +189,12 @@ public class MapUtil {
         reflexToListener(blockMapList,MapListener.REFLEX_RECEIVE_BLOCKMAPLIST);
     }
 
+
     private void setTrack(byte[] track_data_decode)
     {
+        /**
+         * 根据协议来处理
+         */
         int type = track_data_decode[0];
         int count_bytes_mapPoint = track_data_decode[1];
         int area_cleaned = __toIntBig(track_data_decode,2,2);
@@ -152,6 +203,10 @@ public class MapUtil {
         int length = track_data_decode.length - 8;
         byte[] data = new byte[length];
         System.arraycopy(track_data_decode,8,data,0,length);
+
+        /**
+         * 
+         */
         if (index_begin != 0 && track.getIndex_end() == index_begin)
         {
             // TODO analysis track data
@@ -173,6 +228,10 @@ public class MapUtil {
         reflexToListener(track,MapListener.REFLEX_RECEIVE_TRACK);
     }
 
+    /**
+     * 解析bytes数组，并且将返回一个mapPointList
+     * 用于解析分块地图数据
+     */
     private List<MapPoint> analysis_bytes(byte[] bytes,int x_begin , int y_begin) {
         List<MapPoint> mapPointList = new ArrayList<>();
         int x = 0;
@@ -196,6 +255,12 @@ public class MapUtil {
         return mapPointList;
     }
 
+    /**
+     * 解析bytes数组，并且将返回一个mapPointList
+     * count_bytes_mapPoint 是指几个byte代表了一个mapPoint的x或y坐标
+     * 用于解析轨迹数据中地图点
+     * 根据轨迹协议，可能用2或4个byte来代表一个mapPoint的x或y坐标
+     */
     private List<MapPoint> analysis_bytes(byte[] bytes,int count_bytes_mapPoint)
     {
         List<MapPoint> mapPointList = new ArrayList<>();

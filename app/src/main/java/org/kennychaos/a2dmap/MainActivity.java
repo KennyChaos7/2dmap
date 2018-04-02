@@ -60,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         x.view().inject(this);
         logUtil = new LogUtil(this);
 
+        /**
+         * first you need get the robot's ip
+         */
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager != null ? wifiManager.getConnectionInfo() : null;
         try {
@@ -67,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             logUtil.show("local_ip = " + local_ip, LogUtil.LOG_LEVEL_INFO);
             tcpUtil = new TCPUtil(8088, local_ip);
             tcpUtil.registerListener(this);
+            /**
+             * this robot's ip just for test 
+             */
             tcpUtil.setRoombaIP("192.168.233.200");
             mapUtil = new MapUtil();
             mapUtil.registerListener(this);
@@ -94,6 +100,10 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     @Event(value = R.id.btn_first)
     private void first(View view) {
         mapView.clear();
+        /**
+         * according to the agreement : first time , your need to send this bytes to tell the robot , and receive the whole map data .
+         * 
+         */
         String _ = Base64.encodeToString(__intToByteArrayLittle(0,4),Base64.NO_WRAP);
         JSONObject jo = new JSONObject();
         try {
@@ -115,6 +125,10 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     @Event(value = R.id.btn_update_map)
     private void updateMap(View v)
     {
+        /**
+         * timing to request a update data from robot
+         * 5 secord just perfect
+         */
         scheduledThread.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {

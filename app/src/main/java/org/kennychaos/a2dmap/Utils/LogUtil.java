@@ -7,7 +7,7 @@ import android.util.Log;
 /**
  * Created by Kenny on 18-2-5.
  */
-
+@Deprecated
 public class LogUtil {
     public final static int LOG_LEVEL_VERBOSE = 0;
     public final static int LOG_LEVEL_INFO = 1;

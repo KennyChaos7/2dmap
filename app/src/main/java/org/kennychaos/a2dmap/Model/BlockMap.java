@@ -12,11 +12,29 @@ import java.util.Vector;
 
 public class BlockMap {
 
+    /**
+     * 历史更新标识
+     * 默认该表示必须为0
+     * 当每获取到一个分块地图的时候必须更新此标识，并且在除开第一次获取地图外，每次获取最新的地图时将必须将100块的分块地图的历史更新标识组成一个byte数组发送出去
+     */
     private int history_id = 0;
+
+    /**
+     * 该分块地图在100块分块地图中的序号
+     */
     private int index_in_whole_map = -1;
+
+    /**
+     * 该分块的数据长度
+     */
     private int length = -1;
+
+    /**
+     * 该分块地图的地图数据
+     */
     private List<MapPoint> mapPointList = new ArrayList<>();
 
+    @Deprecated
     public BlockMap(int index_in_whole_map){
         this.index_in_whole_map = index_in_whole_map;
     }

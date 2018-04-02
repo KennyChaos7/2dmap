@@ -46,6 +46,9 @@ public class TCPUtil {
     public TCPUtil(@NonNull final int port, @NonNull final String localhost) {
         this.port = port;
         this.localhost = localhost;
+        /**
+         * 用于局域网搜索机器的ip
+         */
         searchRunnable = new Runnable() {
             @Override
             public void run() {
@@ -143,6 +146,10 @@ public class TCPUtil {
                 R.execute(new Runnable() {
                     @Override
                     public void run() {
+                        /**
+                         * 由于数组可能过大，导致tcp可能一次无法接收完全，故使用下面方法来确保一帧的数据得以接收完全
+                         * 帧头开始4个byte为整一帧数据的长度
+                         */
                         byte[] buffers_whole_data_length = new byte[4];
                         int should_receive_data_length = 0, receive_data_length = -1;
                         try {
@@ -221,6 +228,9 @@ public class TCPUtil {
         }
     }
 
+    /**
+     * 反射到所有监听中
+     */
     private void reflexToListener(int reflex_type, HashMap<String,Object> hashMap)
     {
         List<TCPListener> list = tcpListenerList;
@@ -264,20 +274,5 @@ public class TCPUtil {
 
     public void setRoombaIP(String roombaIP) {
         this.roombaIP = roombaIP;
-    }
-
-
-    class ScheduleCallable implements Callable<Object>
-    {
-        String command = "0";
-        public ScheduleCallable(String command)
-        {
-            this.command = command;
-        }
-        @Override
-        public Object call() throws Exception {
-
-            return null;
-        }
     }
 }

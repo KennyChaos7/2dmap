@@ -16,11 +16,19 @@ public interface TCPListener {
     int SEND_FAILED = -404;
     int RECEIVE_FAILED = -402;
 
+    /**
+     * 已经接受到数据将会调用这个监听
+     */
     void onReceive(byte[] bytes,int length);
 
+    /**
+     * 已经发生的数据将会调用这个监听
+     */
     void onSend(byte[] bytes);
 
+    @Deprecated
     void onError(int errorCode,String errorMessage);
 
+    @Deprecated
     void onState(String stateMessage);
 }
