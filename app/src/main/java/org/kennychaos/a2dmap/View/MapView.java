@@ -114,6 +114,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     }
 
     public synchronized void refresh() {
+//        clear();
         for (BlockMap blockMap : blockMapList)
         {
             if (blockMap.getHistory_id() != -1)
@@ -205,6 +206,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
      * @param paint_track_color
      * @param paint_bot_color
      */
+    @Deprecated
     private void setPaints(float scale , String paint_block_color , String paint_cleaned_color , String paint_track_color , String paint_bot_color )
     {
         int block_color = 0;
@@ -238,6 +240,14 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
         }
     }
 
+    /**
+     *
+     * @param x
+     * @param y
+     * @param x_next
+     * @param y_next
+     * @param draw_type
+     */
     private void draw(int x , int y , int x_next , int y_next , int draw_type)
     {
         switch (draw_type)
