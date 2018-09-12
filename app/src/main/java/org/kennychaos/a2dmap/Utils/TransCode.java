@@ -48,6 +48,7 @@ public class TransCode {
     /**
      *
      * @param value
+     * @param length
      * @return
      */
     public static byte[] __intToByteArrayLittle(int value, int length) {

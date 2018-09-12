@@ -161,24 +161,28 @@ public class MapUtil {
             history_id = __toIntBig(array_data,2,2);
             data_length = __toIntBig(array_data,2,4);
             if (data_length > 0) {
-//                if (BuildConfig.DEBUG)
-//                    Log.e(TAG,"index = " + index_in_whole_map + " data_length = " + data_length + " history_id = " + history_id);
                 byte[] data_compress = new byte[data_length];
                 System.arraycopy(array_data, 6 , data_compress, 0, data_length);
                 byte[] data_uncompress = __uncompress(data_compress, data_length);// 100x100
                 int x_begin = (index_in_whole_map - 1) % 10 * 100 ;
                 int y_begin = (index_in_whole_map - 1) / 10 * 100 ;
-                BlockMap blockMap_new = new BlockMap(history_id, index_in_whole_map, data_length, analysis_bytes(data_uncompress, x_begin, y_begin));
+                BlockMap blockMap_new = new BlockMap(history_id, index_in_whole_map - 1, data_length, analysis_bytes(data_uncompress, x_begin, y_begin));
 
                 for (BlockMap blockMap_old : blockMapList) {
-                    if (blockMap_old.getIndex_in_whole_map() == index_in_whole_map && blockMap_old.getHistory_id() < history_id) {
-                        if (BuildConfig.DEBUG)
-                            Log.e(TAG,"update index_in_whole_map = " + index_in_whole_map + " new_history_id = " + history_id + " old_history_id = " + blockMap_old.getHistory_id());
+
+                    if (blockMap_old.getIndex_in_whole_map() == index_in_whole_map - 1 && blockMap_old.getHistory_id() < history_id) {
+                        if (BuildConfig.DEBUG) {
+                            Log.e(TAG, "update new history_id " + history_id + " index_in_whole_map " + (index_in_whole_map - 1));
+                            Log.e(TAG, blockMap_old.toString());
+                        }
                         blockMap_old.setHistory_id(history_id);
-                        blockMap_old.setIndex_in_whole_map(index_in_whole_map);
+                        blockMap_old.setIndex_in_whole_map(index_in_whole_map - 1);
                         blockMap_old.setLength(data_length);
                         blockMap_old.setMapPointList(blockMap_new.getMapPointList());
                     }
+//                    else if (blockMap_old.getIndex_in_whole_map() == (index_in_whole_map - 1) && blockMap_old.getHistory_id() > history_id)
+//                        if (BuildConfig.DEBUG)
+//                            throw new RuntimeException("data recv error");
                 }
 
             }
@@ -231,6 +235,7 @@ public class MapUtil {
     /**
      * 解析bytes数组，并且将返回一个mapPointList
      * 用于解析分块地图数据
+     * @return List
      */
     private List<MapPoint> analysis_bytes(byte[] bytes,int x_begin , int y_begin) {
         List<MapPoint> mapPointList = new ArrayList<>();

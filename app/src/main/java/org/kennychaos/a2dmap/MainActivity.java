@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             /**
              * this robot's ip just for test 
              */
-            tcpUtil.setRoombaIP("192.168.233.200");
+            tcpUtil.setRoombaIP("192.168.233.153");
             mapUtil = new MapUtil();
             mapUtil.registerListener(this);
             mapView = new MapView(this);
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     {
         /**
          * timing to request a update data from robot
-         * 5 secord just perfect
+         * 5 second just perfect
          */
         scheduledThread.scheduleAtFixedRate(new Runnable() {
             @Override

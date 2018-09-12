@@ -14,10 +14,10 @@ public class BlockMap {
 
     /**
      * 历史更新标识
-     * 默认该表示必须为0
+     * 默认该表示必须为1
      * 当每获取到一个分块地图的时候必须更新此标识，并且在除开第一次获取地图外，每次获取最新的地图时将必须将100块的分块地图的历史更新标识组成一个byte数组发送出去
      */
-    private int history_id = 0;
+    private int history_id = 1;
 
     /**
      * 该分块地图在100块分块地图中的序号
@@ -50,7 +50,7 @@ public class BlockMap {
     @Override
     public String toString()
     {
-        return "BlockMap\nhistory_id = " + history_id + " index_in_whole_map = " + index_in_whole_map + " length = " + length + " mapPointList.size = " + mapPointList.size();
+        return "\nhistory_id = " + history_id + " index_in_whole_map = " + index_in_whole_map + " length = " + length + " mapPointList.size = " + mapPointList.size() + "\n";
     }
 
     public String getDetails()
