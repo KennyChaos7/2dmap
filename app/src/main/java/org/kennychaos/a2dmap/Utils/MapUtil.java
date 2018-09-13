@@ -23,6 +23,7 @@ import java.util.Vector;
 
 public class MapUtil {
     private final String TAG = "===" + getClass().getSimpleName() + "=== ";
+    private long __time;
     /** receive data type **/
     @Deprecated
     private final static byte TYPE_WHOLE_MAP_SMALL = 0;
@@ -97,15 +98,17 @@ public class MapUtil {
         }
     }
 
-
     public void analysis(String data)
     {
         initList();
+        __time = System.currentTimeMillis();
+        Log.e("analysis time cost","start = " + __time);
         try {
             /**
              * 将数据转化成json
              */
             MapData mapData = gson.fromJson(data, MapData.class);
+            Log.e("analysis time cost","to gson = " + (System.currentTimeMillis()-__time));
             Log.e(TAG,"analysis = " + data);
             if (mapData.map != null)
             {
@@ -114,6 +117,7 @@ public class MapUtil {
                 if (map_data_decode.length > 0)
                     setBlockMap(map_data_decode);
             }
+            Log.e("analysis time cost","map = " + (System.currentTimeMillis()-__time));
             if (mapData.track != null)
             {
                 // TODO analysis track
@@ -121,10 +125,13 @@ public class MapUtil {
                 if (track_data_decode.length > 0)
                     setTrack(track_data_decode);
             }
+            Log.e("analysis time cost","track = " + (System.currentTimeMillis()-__time));
         }catch (JsonSyntaxException e)
         {
             Log.e(TAG,"JsonSyntaxException");
             reflexToListener("this data is incomplete",MapListener.REFLEX_ON_ERROR);
+        }finally {
+            Log.e("analysis time cost","end = " + (System.currentTimeMillis()-__time));
         }
     }
 
@@ -307,6 +314,7 @@ public class MapUtil {
     {
         byte[] buffer = new byte[length];
         System.arraycopy(bytes, start, buffer, 0, length);
+
         int MASK = 0xFF;
         int result = 0;
         result += (buffer[1] & MASK) + ((buffer[0] & MASK) << 8);

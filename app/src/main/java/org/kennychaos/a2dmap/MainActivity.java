@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             /**
              * this robot's ip just for test 
              */
-            tcpUtil.setRoombaIP("192.168.233.153");
+            tcpUtil.setRoombaIP("172.16.3.193");// 192.168.10.135
             mapUtil = new MapUtil();
             mapUtil.registerListener(this);
             mapView = new MapView(this);
@@ -90,11 +90,13 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         mapView.clear();
         tcpUtil.search();
     }
+    String __data = "{\"map\":\"BQADAEIAAgC3AMQAoCDXAKAI1wCICNcAKAjXACgI1wAiAtcAIgLXAAoC1wAIgtcACILXAALCgNYAAsKA1gACIIDXAKCA1wCgINcAiCDXAIgg1wAoINcAIiDXACII1wAKCNcACIjXAAiI1wACgtcAAiLXAAIi1wACItgAotgAiIDXAIiA1wAogNcAIoDXACIg1wAKINcACKDXAAig1wAIiNcAAijXAAIo1wACKNgAiNgAitgAitgARtgAAtgAAdXXAEkAAgAPAPEAAtgACNgAINgAQOXHAEoAAgAEAIDnwwA=\",\"track\":\"BAQBAJAAkAA=\"}";
 
     @Event(value = R.id.btn_tcp)
     private void start_tcp(View view){
         mapView.clear();
         tcpUtil.conn();
+//        mapUtil.analysis(__data);
     }
 
     @Event(value = R.id.btn_first)
