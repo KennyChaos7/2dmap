@@ -334,18 +334,13 @@ public class MapUtil {
         return result;
     }
 
-    private byte[] __bytesDelete(byte[] target , int index)
+    private byte[] __bytesDelete(byte[] target , int delete_length)
     {
-        int l = target.length - index;
-        byte[] r = new byte[l];
-        if (index == l)
-            return new byte[]{};
-        else if (index < l)
-        {
-            System.arraycopy(target,index,r,0,l);
-            return r;
-        }
-        return new byte[]{};
+        int overage = target.length - delete_length;
+        byte[] overage_bytes = new byte[overage];
+        System.arraycopy(target,delete_length,overage_bytes,0,overage);
+        target = new byte[]{};
+        return overage_bytes;
     }
 
     private void reflexToListener(Object o, int type)
