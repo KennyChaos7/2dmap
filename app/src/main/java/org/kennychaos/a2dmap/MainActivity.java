@@ -2,9 +2,11 @@ package org.kennychaos.a2dmap;
 
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.nfc.Tag;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -22,6 +24,7 @@ import org.xutils.view.annotation.Event;
 import org.xutils.view.annotation.ViewInject;
 import org.xutils.x;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -90,13 +93,31 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         mapView.clear();
         tcpUtil.search();
     }
-    String __data = "{\"map\":\"BQADAEIAAgC3AMQAoCDXAKAI1wCICNcAKAjXACgI1wAiAtcAIgLXAAoC1wAIgtcACILXAALCgNYAAsKA1gACIIDXAKCA1wCgINcAiCDXAIgg1wAoINcAIiDXACII1wAKCNcACIjXAAiI1wACgtcAAiLXAAIi1wACItgAotgAiIDXAIiA1wAogNcAIoDXACIg1wAKINcACKDXAAig1wAIiNcAAijXAAIo1wACKNgAiNgAitgAitgARtgAAtgAAdXXAEkAAgAPAPEAAtgACNgAINgAQOXHAEoAAgAEAIDnwwA=\",\"track\":\"BAQBAJAAkAA=\"}";
 
     @Event(value = R.id.btn_tcp)
     private void start_tcp(View view){
-        mapView.clear();
-        tcpUtil.conn();
-//        mapUtil.analysis(__data);
+//        mapView.clear();
+//        tcpUtil.conn();
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                StringBuilder __data = new StringBuilder();
+                int length = -1,a_length = 0;
+                try {
+                    int t_length = getAssets().open("testdata").available();
+                    byte[] bytes = new byte[t_length];
+                    length = getAssets().open("testdata").read(bytes);
+                    __data.append(new String(bytes));
+                    String _ = __data.toString();
+                    _ = _.substring(0,t_length).trim();
+                    Log.e("as",_ );
+                    Log.e("as","length = " + length + " _.length = " + _.length() + "\n" + _.substring(t_length - 10));
+                    mapUtil.analysis(_);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Event(value = R.id.btn_first)
@@ -159,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
                     e.printStackTrace();
                 }
             }
-        },0,5, TimeUnit.SECONDS);
+        },0,1500, TimeUnit.MILLISECONDS);
 
     }
 

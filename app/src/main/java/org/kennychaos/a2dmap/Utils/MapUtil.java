@@ -159,7 +159,7 @@ public class MapUtil {
         byte[] array_data = new byte[map_data_decode.length - 4];
         System.arraycopy(map_data_decode,4,array_data,0,array_data.length);
 
-        for (int index = 0; index < count - 1 && array_data.length > 0;index ++ )
+        for (int index = 0; index < count && array_data.length > 0;index ++ )
         {
             /**
              * 根据协议来处理
@@ -167,6 +167,7 @@ public class MapUtil {
             index_in_whole_map = __toIntBig(array_data,2,0);
             history_id = __toIntBig(array_data,2,2);
             data_length = __toIntBig(array_data,2,4);
+            Log.e(TAG,"index_in_whole_map = " + index_in_whole_map + " data_length = " + data_length);
             if (data_length > 0) {
                 byte[] data_compress = new byte[data_length];
                 System.arraycopy(array_data, 6 , data_compress, 0, data_length);
@@ -193,7 +194,9 @@ public class MapUtil {
                 }
 
             }
+            Log.i(TAG,"before delete array data length = " + array_data.length + " index_in_whole_map = " + index_in_whole_map + " data_length = " + data_length);
             array_data = __bytesDelete(array_data,2 + 2 + 2 + data_length);
+            Log.i(TAG,"after delete array data length = " + array_data.length + " index_in_whole_map = " + index_in_whole_map);
         }
         System.gc();
         // TODO reflexToListener to listener

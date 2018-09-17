@@ -35,13 +35,13 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     private Paint paint_cache = new Paint();
     private float scale_screen = 1f;
 
-    private Bitmap bitmap_pointCache , bitmap_lineCache = null;
-    private Canvas canvas_pointCache , canvas_lineCache= null;
+    private Bitmap bitmap_pointCache, bitmap_lineCache = null;
+    private Canvas canvas_pointCache, canvas_lineCache = null;
 
     /* */
-    private final float offset = 3/8;
+    private final float offset = 3 / 8;
     private final float r = 5f;
-    private final float stroke = 1/4;
+    private final float stroke = 1 / 4;
 
     private final int TYPE_BLOCK = 1;
     private final int TYPE_CLEANED = 2;
@@ -59,53 +59,52 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     private ScaleGestureDetector scaleGestureDetector = null;           //检测双手指手势类型
     private float scale_after_matrix = 1.0f;                            //矩阵得出的比列
 
+    private long __time = 0;
 
     public MapView(Context context) {
         super(context);
         setOnTouchListener(this);
-        gestureDetector = new GestureDetector(context,this);
-        scaleGestureDetector = new ScaleGestureDetector(context,this);
+        gestureDetector = new GestureDetector(context, this);
+        scaleGestureDetector = new ScaleGestureDetector(context, this);
     }
 
     public MapView(Context context, AttributeSet attrs) {
         super(context, attrs);
         setOnTouchListener(this);
-        gestureDetector = new GestureDetector(context,this);
-        scaleGestureDetector = new ScaleGestureDetector(context,this);
+        gestureDetector = new GestureDetector(context, this);
+        scaleGestureDetector = new ScaleGestureDetector(context, this);
     }
 
     public MapView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setOnTouchListener(this);
-        gestureDetector = new GestureDetector(context,this);
-        scaleGestureDetector = new ScaleGestureDetector(context,this);
+        gestureDetector = new GestureDetector(context, this);
+        scaleGestureDetector = new ScaleGestureDetector(context, this);
     }
 
     /**
-     *
      * @param scale_screen
      * @param bg_color_string
      * @param view_width
      * @param view_height
      */
-    public void init(float scale_screen , String bg_color_string , int view_width , int view_height){
+    public void init(float scale_screen, String bg_color_string, int view_width, int view_height) {
         int bg_color = 0;
         matrix_scale = new Matrix();
         matrix_translate = new Matrix();
         matrix = new Matrix();
         try {
             bg_color = Color.parseColor(bg_color_string);
-        }catch (IllegalArgumentException e)
-        {
+        } catch (IllegalArgumentException e) {
             if (BuildConfig.DEBUG)
-                Log.e(TAG,"传入的颜色String有误 - " + bg_color_string);
+                Log.e(TAG, "传入的颜色String有误 - " + bg_color_string);
             bg_color = Color.parseColor("#D8B0B0B0");
-        }finally {
-            bitmap_pointCache = Bitmap.createBitmap(view_width,view_height, Bitmap.Config.ARGB_8888);
+        } finally {
+            bitmap_pointCache = Bitmap.createBitmap(view_width, view_height, Bitmap.Config.ARGB_8888);
             canvas_pointCache = new Canvas(bitmap_pointCache);
-            bitmap_lineCache = Bitmap.createBitmap(view_width,view_height, Bitmap.Config.ARGB_8888);
+            bitmap_lineCache = Bitmap.createBitmap(view_width, view_height, Bitmap.Config.ARGB_8888);
             canvas_lineCache = new Canvas(bitmap_lineCache);
-            setLayoutParams(new ViewGroup.LayoutParams(view_width,view_height));
+            setLayoutParams(new ViewGroup.LayoutParams(view_width, view_height));
             setBackgroundColor(bg_color);
             this.scale_screen = scale_screen;
             setPaints(this.scale_screen);
@@ -114,23 +113,24 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     }
 
     public synchronized void refresh() {
+        __time = System.currentTimeMillis();
+        Log.e("draw time cost", "start = " + __time);
 //        clear();
-        for (BlockMap blockMap : blockMapList)
-        {
+        for (BlockMap blockMap : blockMapList) {
             if (blockMap.getHistory_id() != -1)
-                for (MapPoint m : blockMap.getMapPointList())
-                {
+                for (MapPoint m : blockMap.getMapPointList()) {
                     // TODO draw point
                     if (m.getType() == 1)
-                        draw(m.getX(),m.getY(),0,0,TYPE_BLOCK);
+                        draw(m.getX(), m.getY(), 0, 0, TYPE_BLOCK);
                     else if (m.getType() == 2)
-                        draw(m.getX(),m.getY(),0,0,TYPE_CLEANED);
+                        draw(m.getX(), m.getY(), 0, 0, TYPE_CLEANED);
                     else if (m.getType() != 0)
-                        draw(m.getX(),m.getY(),0,0, TYPE_UNCLEANED);
+                        draw(m.getX(), m.getY(), 0, 0, TYPE_UNCLEANED);
                 }
         }
+        Log.e("draw time cost", "to map = " + (System.currentTimeMillis() - __time));
         clearTrack();
-        if (track.getIndex_begin() >= 0 && track.getMapPointList().size() > 0 ) {
+        if (track.getIndex_begin() >= 0 && track.getMapPointList().size() > 0) {
             for (int index = 0; index + 1 < track.getMapPointList().size(); index++) {
                 MapPoint p = track.getMapPointList().get(index);
                 MapPoint p_next = track.getMapPointList().get(index + 1);
@@ -142,18 +142,17 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
             canvas_lineCache.drawCircle((botPoint.getX() + offset) * scale_screen, (botPoint.getY() + offset) * scale_screen, r * scale_screen, paint_bot);
             Log.i(TAG + " bot ", botPoint.toString());
         }
+        Log.e("draw time cost", "to track = " + (System.currentTimeMillis() - __time));
         postInvalidate();
     }
 
-    public void clear(){
-        if (canvas_pointCache != null)
-        {
+    public void clear() {
+        if (canvas_pointCache != null) {
             Paint cleanPaint = new Paint();
             cleanPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
             canvas_pointCache.drawPaint(cleanPaint);
         }
-        if (canvas_lineCache != null)
-        {
+        if (canvas_lineCache != null) {
             Paint cleanPaint = new Paint();
             cleanPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
             canvas_lineCache.drawPaint(cleanPaint);
@@ -161,10 +160,8 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
         postInvalidate();
     }
 
-    public void clearTrack()
-    {
-        if (canvas_lineCache != null)
-        {
+    public void clearTrack() {
+        if (canvas_lineCache != null) {
             Paint cleanPaint = new Paint();
             cleanPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
             canvas_lineCache.drawPaint(cleanPaint);
@@ -173,7 +170,6 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     }
 
     /**
-     *
      * @param scale
      */
     private void setPaints(float scale) {
@@ -199,7 +195,6 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     }
 
     /**
-     *
      * @param scale
      * @param paint_block_color
      * @param paint_cleaned_color
@@ -207,8 +202,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
      * @param paint_bot_color
      */
     @Deprecated
-    private void setPaints(float scale , String paint_block_color , String paint_cleaned_color , String paint_track_color , String paint_bot_color )
-    {
+    private void setPaints(float scale, String paint_block_color, String paint_cleaned_color, String paint_track_color, String paint_bot_color) {
         int block_color = 0;
         int cleaned_color = 0;
         int track_color = 0;
@@ -218,14 +212,14 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
             cleaned_color = Color.parseColor(paint_cleaned_color);
             track_color = Color.parseColor(paint_track_color);
             bot_color = Color.parseColor(paint_bot_color);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             block_color = Color.parseColor("#4D4D4D");
             cleaned_color = Color.parseColor("#FF616D82");
             track_color = Color.rgb(86, 147, 193);
             bot_color = Color.parseColor("#E1E0B700");
             if (BuildConfig.DEBUG)
-                Log.e(TAG,"传入的颜色String有误");
-        }finally {
+                Log.e(TAG, "传入的颜色String有误");
+        } finally {
             paint_block = new Paint();
             paint_block.setColor(block_color);
             paint_block.setStrokeWidth(scale);
@@ -241,43 +235,42 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     }
 
     /**
-     *
      * @param x
      * @param y
      * @param x_next
      * @param y_next
      * @param draw_type
      */
-    private void draw(int x , int y , int x_next , int y_next , int draw_type)
-    {
-        switch (draw_type)
-        {
+    private void draw(int x, int y, int x_next, int y_next, int draw_type) {
+        switch (draw_type) {
             case TYPE_BLOCK:
-                canvas_pointCache.drawPoint(x * scale_screen,y * scale_screen,paint_block);
+                canvas_pointCache.drawPoint(x * scale_screen, y * scale_screen, paint_block);
                 break;
             case TYPE_CLEANED:
-                canvas_pointCache.drawPoint(x * scale_screen , y * scale_screen , paint_cleaned);
+                canvas_pointCache.drawPoint(x * scale_screen, y * scale_screen, paint_cleaned);
                 break;
             case TYPE_TRACK:
-                canvas_lineCache.drawLine(( x + offset ) * scale_screen , ( y + offset ) * scale_screen , ( x_next + offset )* scale_screen , ( y_next + offset ) * scale_screen , paint_track);
+                canvas_lineCache.drawLine((x + offset) * scale_screen, (y + offset) * scale_screen, (x_next + offset) * scale_screen, (y_next + offset) * scale_screen, paint_track);
                 break;
             case TYPE_UNCLEANED:
-                canvas_pointCache.drawPoint(x * scale_screen,y * scale_screen, paint_gray);
+                canvas_pointCache.drawPoint(x * scale_screen, y * scale_screen, paint_gray);
                 break;
         }
     }
 
     @Override
-    protected void onDraw(Canvas canvas){
+    protected void onDraw(Canvas canvas) {
         /* 将缓存画布拼接上原有画布 */
         canvas.concat(matrix_translate);
         canvas.concat(matrix_scale);
         if (bitmap_pointCache != null)
             canvas.drawBitmap(bitmap_pointCache, 0, 0, paint_cache);
+        Log.e("draw time cost", "onDraw bitmap point = " + (System.currentTimeMillis() - __time));
         if (bitmap_lineCache != null)
-            canvas.drawBitmap(bitmap_lineCache,0,0,paint_cache);
-
+            canvas.drawBitmap(bitmap_lineCache, 0, 0, paint_cache);
+        Log.e("draw time cost", "onDraw bitmap line = " + (System.currentTimeMillis() - __time));
         super.onDraw(canvas);
+        Log.e("draw time cost", "onDraw finish = " + (System.currentTimeMillis() - __time));
     }
 
     @Override
@@ -321,8 +314,8 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
 
     @Override
     public boolean onScroll(MotionEvent event_before, MotionEvent event_current, float distanceX, float distanceY) {
-            matrix_translate.postTranslate(-distanceX, -distanceY);
-            postInvalidate();
+        matrix_translate.postTranslate(-distanceX, -distanceY);
+        postInvalidate();
         return true;
     }
 
