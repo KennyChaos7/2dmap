@@ -1,7 +1,9 @@
 package org.kennychaos.a2dmap.Utils;
 
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
+import android.view.View;
 
 import org.kennychaos.a2dmap.Listener.TCPListener;
 
@@ -85,8 +87,12 @@ public class TCPUtil {
     public void conn()
     {
         Log.e(TAG,"conn");
-        if (Objects.equals(roombaIP, ""))
-            throw new NullPointerException("roomba ip is null");
+        if (Objects.equals(roombaIP, "")) {
+//            throw new NullPointerException("roomba ip is null");
+            HashMap<String,Object> errorMessage = new HashMap<>();
+            errorMessage.put("errorMessage","roomba ip is null");
+            reflexToListener(TCPListener.REFLEX_ON_ERROR,errorMessage);
+        }
         else {
             Executors.newSingleThreadExecutor().execute(new Runnable() {
                 @Override
@@ -111,12 +117,24 @@ public class TCPUtil {
 
     public void send(final byte[] data)
     {
-        if (Objects.equals(roombaIP, ""))
-            throw new NullPointerException("roomba ip is null");
-        else if (client == null)
-            throw new NullPointerException("client is null");
-        else if (client.isClosed() || !client.isConnected())
-            throw new NullPointerException("client has been close");
+        if (Objects.equals(roombaIP, "")) {
+//            throw new NullPointerException("roomba ip is null");
+            HashMap<String,Object> errorMessage = new HashMap<>();
+            errorMessage.put("errorMessage","roomba ip is null");
+            reflexToListener(TCPListener.REFLEX_ON_ERROR,errorMessage);
+        }
+        else if (client == null) {
+//            throw new NullPointerException("client is null");
+            HashMap<String,Object> errorMessage = new HashMap<>();
+            errorMessage.put("errorMessage","client is null");
+            reflexToListener(TCPListener.REFLEX_ON_ERROR,errorMessage);
+        }
+        else if (client.isClosed() || !client.isConnected()) {
+//            throw new NullPointerException("client has been close");
+            HashMap<String,Object> errorMessage = new HashMap<>();
+            errorMessage.put("errorMessage","client has been close");
+            reflexToListener(TCPListener.REFLEX_ON_ERROR,errorMessage);
+        }
         else if (client.isConnected())
         {
             S.execute(new Runnable() {
@@ -175,7 +193,7 @@ public class TCPUtil {
                                     reflexToListener(TCPListener.REFLEX_ON_RECEIVE, hashMap);
                                 }
                             }
-                        } catch (IOException e) {
+                        } catch (IOException | ArrayIndexOutOfBoundsException e) {
                             e.printStackTrace();
                         }
                     }
@@ -241,12 +259,12 @@ public class TCPUtil {
                 switch (reflex_type)
                 {
                     case TCPListener.REFLEX_ON_ERROR:
-                        int errorCode = (int) hashMap.get("errorCode");
-                        if (errorCode != 0)
-                        {
+//                        int errorCode = (int) hashMap.get("errorCode");
+//                        if (errorCode != 0)
+//                        {
                             String errorMessage = (String) hashMap.get("errorMessage");
-                            listener.onError(errorCode,errorMessage);
-                        }
+                            listener.onError(TCPListener.REFLEX_ON_ERROR,errorMessage);
+//                        }
                         break;
 
                     case TCPListener.REFLEX_ON_RECEIVE:
@@ -271,6 +289,7 @@ public class TCPUtil {
         }
         System.gc();
     }
+
 
     public void setRoombaIP(String roombaIP) {
         this.roombaIP = roombaIP;

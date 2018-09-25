@@ -113,6 +113,7 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
     }
 
     public synchronized void refresh() {
+        clear();
         __time = System.currentTimeMillis();
         Log.e("draw time cost", "start = " + __time);
 //        clear();

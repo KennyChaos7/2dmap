@@ -3,6 +3,7 @@ package org.kennychaos.a2dmap;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.nfc.Tag;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             /**
              * this robot's ip just for test 
              */
-            tcpUtil.setRoombaIP("172.16.3.193");// 192.168.10.135
+            tcpUtil.setRoombaIP("192.168.10.147");
             mapUtil = new MapUtil();
             mapUtil.registerListener(this);
             mapView = new MapView(this);
@@ -92,32 +93,37 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     {
         mapView.clear();
         tcpUtil.search();
+//        Executors.newSingleThreadExecutor().execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                StringBuilder __data = new StringBuilder();
+//                int length = -1,a_length = 0;
+//                try {
+//                    while (true) {
+//                        int t_length = getAssets().open("testdata").available();
+//                        byte[] bytes = new byte[t_length];
+//                        length = getAssets().open("testdata").read(bytes);
+//                        __data.append(new String(bytes));
+//                        String _ = __data.toString();
+//                        _ = _.substring(0, t_length).trim();
+//                        Log.e("as", _);
+//                        Log.e("as", "length = " + length + " _.length = " + _.length() + "\n" + _.substring(t_length - 10));
+//                        mapUtil.analysis(_);
+//                        Thread.sleep(3 * 1000);
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
     }
 
     @Event(value = R.id.btn_tcp)
     private void start_tcp(View view){
-//        mapView.clear();
-//        tcpUtil.conn();
-        Executors.newSingleThreadExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                StringBuilder __data = new StringBuilder();
-                int length = -1,a_length = 0;
-                try {
-                    int t_length = getAssets().open("testdata").available();
-                    byte[] bytes = new byte[t_length];
-                    length = getAssets().open("testdata").read(bytes);
-                    __data.append(new String(bytes));
-                    String _ = __data.toString();
-                    _ = _.substring(0,t_length).trim();
-                    Log.e("as",_ );
-                    Log.e("as","length = " + length + " _.length = " + _.length() + "\n" + _.substring(t_length - 10));
-                    mapUtil.analysis(_);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        mapView.clear();
+        tcpUtil.conn();
     }
 
     @Event(value = R.id.btn_first)
@@ -180,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
                     e.printStackTrace();
                 }
             }
-        },0,1500, TimeUnit.MILLISECONDS);
+        },0,2 * 1000, TimeUnit.MILLISECONDS);
 
     }
 
@@ -211,7 +217,13 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
 
     @Override
     public void onError(int errorCode, String errorMessage) {
+        Snackbar.make(mapView,errorMessage,Snackbar.LENGTH_INDEFINITE)
+                .setAction("CLOSE", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
 
+                    }
+                }).show();
     }
 
     @Override
