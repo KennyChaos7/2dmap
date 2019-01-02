@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
     private List<BlockMap> blockMapList = new ArrayList<>();
     private Track track = new Track();
     private ScheduledExecutorService scheduledThread = Executors.newScheduledThreadPool(1);
-
+    private static final String test_file_name = "testdata10";
 
     @ViewInject(R.id.linear_mapview)
     private LinearLayout linear_mapView;
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
             /**
              * this robot's ip just for test 
              */
-            tcpUtil.setRoombaIP("192.168.10.147");
+            tcpUtil.setRoombaIP("192.168.233.168");
             mapUtil = new MapUtil();
             mapUtil.registerListener(this);
             mapView = new MapView(this);
@@ -88,36 +88,26 @@ public class MainActivity extends AppCompatActivity implements TCPListener, MapL
         }
     }
 
-    @Event(value = R.id.btn_search)
-    private void search(View view)
+    @Event(value = R.id.btn_local)
+    private void btn_local(View view)
     {
-        mapView.clear();
-        tcpUtil.search();
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                StringBuilder __data = new StringBuilder();
-//                int length = -1,a_length = 0;
-//                try {
-//                    while (true) {
-//                        int t_length = getAssets().open("testdata").available();
-//                        byte[] bytes = new byte[t_length];
-//                        length = getAssets().open("testdata").read(bytes);
-//                        __data.append(new String(bytes));
-//                        String _ = __data.toString();
-//                        _ = _.substring(0, t_length).trim();
-//                        Log.e("as", _);
-//                        Log.e("as", "length = " + length + " _.length = " + _.length() + "\n" + _.substring(t_length - 10));
-//                        mapUtil.analysis(_);
-//                        Thread.sleep(3 * 1000);
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
+        Executors.newSingleThreadExecutor().submit(()->{
+            StringBuilder __data = new StringBuilder();
+            int length = -1,a_length = 0;
+            try {
+                int t_length = getAssets().open(test_file_name).available();
+                byte[] bytes = new byte[t_length];
+                length = getAssets().open(test_file_name).read(bytes);
+                __data.append(new String(bytes));
+                String _ = __data.toString();
+                _ = _.substring(0, t_length).trim();
+                Log.e("as", _);
+                Log.e("as", "length = " + length + " _.length = " + _.length() + "\n" + _.substring(t_length - 10));
+                mapUtil.analysis(_);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Event(value = R.id.btn_tcp)
