@@ -177,22 +177,17 @@ public class MapView extends View implements View.OnTouchListener ,GestureDetect
         paint_block = new Paint();
         paint_block.setColor(Color.parseColor("#98F5FF"));
         paint_block.setStrokeWidth(scale);
-//        paint_block.setAntiAlias(true);
         paint_cleaned = new Paint();
         paint_cleaned.setColor(Color.parseColor("#FF616D82"));
         paint_cleaned.setStrokeWidth(scale);
-//        paint_cleaned.setAntiAlias(true);
         paint_track = new Paint();
         paint_track.setColor(Color.RED);
         paint_track.setStrokeWidth(scale * stroke);
-//        paint_track.setAntiAlias(true);
         paint_bot = new Paint();
         paint_bot.setColor(Color.parseColor("#E0B700"));
-//        paint_bot.setAntiAlias(true);
         paint_gray = new Paint();
         paint_gray.setStrokeWidth(scale);
         paint_gray.setColor(Color.parseColor("#4D4D4D"));
-//        paint_gray.setAntiAlias(true);
     }
 
     /**
